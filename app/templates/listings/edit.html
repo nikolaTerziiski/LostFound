@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Редакция на обява</h2>
+<form method="post" class="mt-3">
+  <div class="mb-3">
+    <label class="form-label">Заглавие</label>
+    <input class="form-control" type="text" name="title" value="{{ listing.title }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Описание</label>
+    <textarea class="form-control" name="description" rows="4" required>{{ listing.description }}</textarea>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Категория</label>
+    <select class="form-select" name="category_id" required>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {{ 'selected' if c.id == listing.category_id else '' }}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Статус</label>
+    <select class="form-select" name="status">
+      {% for s in Status %}
+        <option value="{{ s.value }}" {{ 'selected' if s == listing.status else '' }}>{{ s.value }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">coordinateX</label>
+      <input class="form-control" type="number" step="any" name="coordinateX" value="{{ listing.coordinateX or '' }}">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">coordinateY</label>
+      <input class="form-control" type="number" step="any" name="coordinateY" value="{{ listing.coordinateY or '' }}">
+    </div>
+  </div>
+  <button class="btn btn-primary" type="submit">Запази</button>
+  <a class="btn btn-link" href="{{ url_for('listings.detail', listing_id=listing.id) }}">Откажи</a>
+</form>
+{% endblock %}

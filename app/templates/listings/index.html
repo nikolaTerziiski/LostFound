@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">Обяви</h2>
+  <a class="btn btn-primary" href="{{ url_for('listings.create') }}">+ Нова обява</a>
+</div>
+
+<div class="list-group">
+  {% for l in listings %}
+  <a class="list-group-item list-group-item-action" href="{{ url_for('listings.detail', listing_id=l.id) }}">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">{{ l.title }}</h5>
+      <small class="text-muted">{{ l.created_at.strftime("%d.%m.%Y") }}</small>
+    </div>
+    <p class="mb-1 text-truncate">{{ l.description }}</p>
+    <small class="text-muted">{{ l.category.name }} • {{ l.status.value }}</small>
+  </a>
+  {% else %}
+  <div class="alert alert-info">Няма обяви.</div>
+  {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-3">
+  <ul class="pagination">
+    <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+      <a class="page-link" href="{{ url_for('listings.index', page=pagination.prev_num) }}">‹</a>
+    </li>
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if p %}
+        <li class="page-item {{ 'active' if p==pagination.page }}">
+          <a class="page-link" href="{{ url_for('listings.index', page=p) }}">{{ p }}</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+      <a class="page-link" href="{{ url_for('listings.index', page=pagination.next_num) }}">›</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

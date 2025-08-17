@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center my-5">
+    <h1 class="display-4 fw-bold">Lost & Found</h1>
+    <p class="lead mb-4">
+        Платформа за обяви на изгубени и намерени вещи.  
+        Намери своето или помогни на друг да го открие!
+    </p>
+
+    <form action="{{ url_for('listings.index') }}" method="get" class="d-flex justify-content-center mb-4">
+        <input type="text" name="q" class="form-control w-50 me-2" placeholder="Търси по заглавие или описание...">
+        <button type="submit" class="btn btn-primary">Търси</button>
+    </form>
+
+    <a href="{{ url_for('listings.index') }}" class="btn btn-lg btn-outline-dark">
+        Виж всички обяви
+    </a>
+</div>
+{% endblock %}

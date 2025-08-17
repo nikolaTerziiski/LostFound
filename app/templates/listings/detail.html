@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">{{ listing.title }}</h3>
+    <h6 class="card-subtitle mb-2 text-muted">
+      {{ listing.category.name }} • {{ listing.status.value }}
+    </h6>
+    <p class="card-text">{{ listing.description }}</p>
+
+    {% if listing.coordinateX and listing.coordinateY %}
+      <p class="text-muted mb-1">Локация: ({{ listing.coordinateX }}, {{ listing.coordinateY }})</p>
+    {% endif %}
+
+    <div class="d-flex gap-2 mt-3">
+      {% if current_user.is_authenticated and (current_user.id == listing.owner_id or current_user.role.value == 'admin') %}
+        <a class="btn btn-outline-primary" href="{{ url_for('listings.edit', listing_id=listing.id) }}">Редактирай</a>
+        <form method="post" action="{{ url_for('listings.delete', listing_id=listing.id) }}" onsubmit="return confirm('Сигурен ли си?');">
+          <button type="submit" class="btn btn-outline-danger">Изтрий</button>
+        </form>
+      {% endif %}
+      <a class="btn btn-link" href="{{ url_for('listings.index') }}">← Назад</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

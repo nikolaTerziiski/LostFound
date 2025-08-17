@@ -1,0 +1,17 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+.env
+*.sqlite
+instance/
+.coverage
+htmlcov/
+
+# flask
+uploads/
+migrations/versions/
+
+# editors
+.vscode/
+.idea/

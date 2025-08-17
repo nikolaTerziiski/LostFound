@@ -1,0 +1,14 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+Flask-WTF
+Flask-Mail
+email-validator
+python-dotenv
+Pillow
+
+pytest
+pytest-cov
+mypy
+pylint

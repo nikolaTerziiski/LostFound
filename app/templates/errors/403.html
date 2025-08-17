@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-4">403</h1>
+  <p class="lead">Нямаш права да достъпиш тази страница/действие.</p>
+  <a class="btn btn-primary" href="{{ url_for('listings.index') }}">Към обявите</a>
+  <a class="btn btn-link" href="{{ url_for('main.index') }}">Начало</a>
+</div>
+{% endblock %}

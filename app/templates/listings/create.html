@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Нова обява</h2>
-<form method="post" class="mt-3">
+<form method="post" enctype="multipart/form-data" class="mt-3">
   <div class="mb-3">
     <label class="form-label">Заглавие</label>
     <input class="form-control" type="text" name="title" required>
@@ -9,6 +9,17 @@
   <div class="mb-3">
     <label class="form-label">Описание</label>
     <textarea class="form-control" name="description" rows="4" required></textarea>
+  </div>
+  
+  <div class="mb-3">
+    <label for="formFile" class="form-label">Снимка</label>
+    <input class="form-control" type="file" name="images" id="formFile" accept="image/png, image/jpeg" multiple>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Кога сте го изгубили?</label>
+      <input class="form-control" type="date" name="date_event" required>
+    </div>
   </div>
   <div class="mb-3">
     <label class="form-label">Категория</label>
@@ -28,7 +39,28 @@
       <input class="form-control" type="number" step="any" name="coordinateY" placeholder="23.32">
     </div>
   </div>
+  <hr class="my-4">
+  <h5>Данни за контакт (показват се само на регистрирани потребители)</h5>
+  <div class="row">
+      <div class="col-md-6 mb-3">
+          <label class="form-label">Име</label>
+          <input class="form-control" type="text" name="contact_name">
+      </div>
+      <div class="col-md-6 mb-3">
+          <label class="form-label">Телефон</label>
+          <input class="form-control" type="tel" name="contact_phone">
+      </div>
+  </div>
+  <div class="mb-3">
+      <label class="form-label">Имейл</label>
+      <input class="form-control" type="email" name="contact_email">
+  </div>
   <button class="btn btn-primary" type="submit">Създай</button>
   <a class="btn btn-link" href="{{ url_for('listings.index') }}">Откажи</a>
 </form>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/map-create.js') }}"></script>
 {% endblock %}

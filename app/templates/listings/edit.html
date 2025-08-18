@@ -18,25 +18,54 @@
       {% endfor %}
     </select>
   </div>
+  {% if listing.image_path %}
+    <div class="mb-3">
+        <label class="form-label">Текуща снимка</label>
+        <div>
+            <img src="{{ url_for('uploaded_file', filename=listing.image_path) }}" alt="Текуща снимка" class="img-fluid img-thumbnail" style="max-width: 200px;">
+        </div>
+    </div>
+  {% endif %}
+  <div class="mb-3">
+    <label for="formFile" class="form-label">Нова снимка (ако искаш да я смениш)</label>
+    <input class="form-control" type="file" name="image" id="formFile" accept="image/png, image/jpeg">
+  </div>
   <div class="mb-3">
     <label class="form-label">Статус</label>
     <select class="form-select" name="status">
-      {% for s in Status %}
+      {% for s in status %}
         <option value="{{ s.value }}" {{ 'selected' if s == listing.status else '' }}>{{ s.value }}</option>
       {% endfor %}
     </select>
   </div>
+  <div class="mb-3">
+    <label class="form-label">Промени локацията от картата (влачи пина)</label>
+    <div id="map" style="height: 400px;" class="rounded"></div>
+  </div>
+
+  <input type="hidden" id="coordinateX" name="coordinateX" value="{{ listing.coordinateX or '' }}">
+  <input type="hidden" id="coordinateY" name="coordinateY" value="{{ listing.coordinateY or '' }}">
+  <h5>Данните за контакт на потребителя създал търсенето</h5>
   <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">coordinateX</label>
-      <input class="form-control" type="number" step="any" name="coordinateX" value="{{ listing.coordinateX or '' }}">
-    </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">coordinateY</label>
-      <input class="form-control" type="number" step="any" name="coordinateY" value="{{ listing.coordinateY or '' }}">
-    </div>
+      <div class="col-md-6 mb-3">
+          <label class="form-label">Име</label>
+          <input class="form-control" type="text" name="contact_name" value="{{ listing.contact_name or '' }}">
+      </div>
+      <div class="col-md-6 mb-3">
+          <label class="form-label">Телефон</label>
+          <input class="form-control" type="tel" name="contact_phone" value="{{ listing.contact_phone or '' }}">
+      </div>
+  </div>
+  <div class="mb-3">
+      <label class="form-label">Имейл</label>
+      <input class="form-control" type="email" name="contact_email" value="{{ listing.contact_email or '' }}">
   </div>
   <button class="btn btn-primary" type="submit">Запази</button>
   <a class="btn btn-link" href="{{ url_for('listings.detail', listing_id=listing.id) }}">Откажи</a>
 </form>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/map-edit.js') }}"></script>
 {% endblock %}

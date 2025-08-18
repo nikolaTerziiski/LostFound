@@ -1,5 +1,5 @@
 # app/__init__.py
-from flask import Flask
+from flask import Flask, send_from_directory
 from .config import Config
 from .extensions import db, migrate, login_manager, mail
 from . import models
@@ -9,6 +9,8 @@ from .auth.routes import bp as auth_bp
 from .listings.routes import listings_bp
 from .errors import errors_bp
 from .main.routes import bp as main_bp
+
+import os
 
 def create_app(config_class: type[Config] = Config) -> Flask:
     app = Flask(__name__)
@@ -28,4 +30,11 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(listings_bp)
     app.register_blueprint(errors_bp)
+    
+    @app.route('/uploads/<filename>')
+    def uploaded_file(filename):
+        upload_dir = os.path.join(app.root_path, '..', app.config['UPLOAD_PICTURES'])
+        
+        return send_from_directory(os.path.abspath(upload_dir), filename)
+    
     return app

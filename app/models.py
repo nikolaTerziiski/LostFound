@@ -34,18 +34,19 @@ class User(db.Model, UserMixin):
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
 
+# app/models.py
+
 class Listing(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     description: Mapped[str] = mapped_column(sa.Text(), nullable=False)
-    category: Mapped[str] = mapped_column(sa.String(128), nullable=False)
     status: Mapped[Status] = mapped_column(sa.Enum(Status), default=Status.LOST, nullable=False)
 
     # Ясни имена за координати:
     coordinateX:  Mapped[float | None] = mapped_column(sa.Float(), index=True)
     coordinateY: Mapped[float | None] = mapped_column(sa.Float(), index=True)
 
-    image_path:    Mapped[Optional[str]] = mapped_column(sa.String(255))
+    images:    Mapped[list["ListingImage"]] = relationship(back_populates="listing", cascade="all, delete-orphan")
     location_name: Mapped[Optional[str]] = mapped_column(sa.String(255))
     date_event:    Mapped[date]          = mapped_column(sa.Date(), default=date.today, nullable=False)
 
@@ -59,6 +60,7 @@ class Listing(db.Model):
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Това е правилната дефиниция за връзката с Category
     category_id: Mapped[int] = mapped_column(sa.ForeignKey("category.id"), nullable=False, index=True)
     category: Mapped["Category"] = relationship(back_populates="listings")
     
@@ -67,3 +69,11 @@ class Category(db.Model):
     name: Mapped[str] = mapped_column(sa.String(128), unique=True, nullable=False)
     
     listings: Mapped[list["Listing"]] = relationship(back_populates="category")
+    
+    
+class ListingImage(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    image_path: Mapped[str] = mapped_column(sa.String(255), nullable=False)
+    
+    listing_id: Mapped[int] = mapped_column(sa.ForeignKey("listing.id"), nullable=False)
+    listing: Mapped["Listing"] = relationship(back_populates="images")

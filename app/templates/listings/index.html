@@ -8,6 +8,15 @@
 
 <form action="{{ url_for('listings.index') }}" method="get" class="d-flex mb-3">
     <input type="text" name="q" class="form-control me-2" placeholder="Търси по заглавие или описание..." value="{{ search_query or '' }}">
+    <select name="category" class="form-select" style="max-width: 200px;">
+    <option value="">-- Избери категория --</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}" 
+          {{ 'selected' if c.id==category_id }}>
+        {{ c.name }}
+      </option>
+    {% endfor %}
+  </select>
     <button type="submit" class="btn btn-primary">Търси</button>
 </form>
 <div class="list-group">

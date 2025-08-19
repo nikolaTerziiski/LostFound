@@ -32,18 +32,23 @@ def index():
     page = request.args.get("page", 1, type=int)
     
     search_query = request.args.get('q', '')
+    category_input = request.args.get('category', type=int)
     
-    q = Listing.query.order_by(Listing.created_at.desc())
+    query = Listing.query.order_by(Listing.created_at.desc())
+    categories = Category.query.order_by(Category.name.asc())
+    
     
     if(search_query):
-        q = q.filter(or_(
+        query = query.filter(or_(
             Listing.title.ilike(f"%{search_query}"),
-            Listing.description.ilike(f"%{search_query}")
-        ))
+            Listing.description.lower().ilike(f"%{search_query.lower()}")))
+        
+    if (category_input):
+        query = query.filter_by(category_id=category_input)
     
-    pagination = q.paginate(page=page, per_page=10, error_out=False)
+    pagination = query.paginate(page=page, per_page=10, error_out=False)
     listings = pagination.items
-    return render_template("listings/index.html", listings=listings, pagination=pagination, search_query=search_query)
+    return render_template("listings/index.html", listings=listings, pagination=pagination, search_query=search_query, categories=categories, category_id=category_input)
 
 @listings_bp.route('/<int:listing_id>')
 def detail(listing_id: int):

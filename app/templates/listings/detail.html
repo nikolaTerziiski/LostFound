@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+{% import "listings/utils.html" as utils %}
+
 <div class="card">
   <div class="card-body">
 
@@ -31,7 +33,7 @@
 
     <h3 class="card-title">{{ listing.title }}</h3>
     <h6 class="card-subtitle mb-2 text-muted">
-      Категория: {{ listing.category.name }} • Статус: {{ listing.status.value }}
+      Категория: {{ listing.category.name }} • Статус: {{ utils.status_color(listing.status) }}
     </h6>
     
     {% if listing.date_event %}

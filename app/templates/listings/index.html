@@ -1,3 +1,4 @@
+{% import "listings/utils.html" as utils %}
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -17,7 +18,7 @@
         {% if l.images %}
             <img src="{{ url_for('uploaded_file', filename=l.images[0].image_path) }}" alt="{{ l.title }}" width="120" height="120" style="object-fit: cover;" class="rounded">
         {% else %}
-            <img src="{{ url_for('static', filename='images/No_Image_Available.png') }}" alt="Няма снимка" width="120" height="120" class="rounded">
+            <img src="{{ url_for('static', filename='images/No_Image_Available.jpg') }}" alt="Няма снимка" width="120" height="120" class="rounded">
         {% endif %}
     </div>
     <div class="flex-grow-1">
@@ -26,7 +27,7 @@
           <small class="text-muted">Публикувано на: {{ l.created_at.strftime("%d.%m.%Y") }}</small>
         </div>
         <p class="mb-1 text-truncate">{{ l.description }}</p>
-        <small class="text-muted">{{ l.category.name }} • {{ l.status.value }}</small>
+        <small class="text-muted">{{ l.category.name }} • {{ utils.status_color(l.status) }}</small>
     </div>
 </a>
   {% else %}

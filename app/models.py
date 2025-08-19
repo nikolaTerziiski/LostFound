@@ -25,6 +25,7 @@ class User(db.Model, UserMixin):
     role: Mapped[Role] = mapped_column(sa.Enum(Role), name="role_enum", default=Role.USER, nullable=False)
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow)
 
+    comments: Mapped[list["Comment"]] = relationship(back_populates="commenter", cascade="all, delete-orphan")
     # по-добра типизация с back_populates
     listings: Mapped[list["Listing"]] = relationship(back_populates="owner")
 
@@ -42,11 +43,12 @@ class Listing(db.Model):
     description: Mapped[str] = mapped_column(sa.Text(), nullable=False)
     status: Mapped[Status] = mapped_column(sa.Enum(Status), default=Status.LOST, nullable=False)
 
-    # Ясни имена за координати:
     coordinateX:  Mapped[float | None] = mapped_column(sa.Float(), index=True)
     coordinateY: Mapped[float | None] = mapped_column(sa.Float(), index=True)
 
     images:    Mapped[list["ListingImage"]] = relationship(back_populates="listing", cascade="all, delete-orphan")
+    comments:    Mapped[list["Comment"]] = relationship(back_populates="listing", cascade="all, delete-orphan")
+    
     location_name: Mapped[Optional[str]] = mapped_column(sa.String(255))
     date_event:    Mapped[date]          = mapped_column(sa.Date(), default=date.today, nullable=False)
 
@@ -60,7 +62,6 @@ class Listing(db.Model):
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Това е правилната дефиниция за връзката с Category
     category_id: Mapped[int] = mapped_column(sa.ForeignKey("category.id"), nullable=False, index=True)
     category: Mapped["Category"] = relationship(back_populates="listings")
     
@@ -77,3 +78,26 @@ class ListingImage(db.Model):
     
     listing_id: Mapped[int] = mapped_column(sa.ForeignKey("listing.id"), nullable=False)
     listing: Mapped["Listing"] = relationship(back_populates="images")
+    
+    
+class CommentImage(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    image_path: Mapped[str] = mapped_column(sa.String(255), nullable=False)
+    
+    comment_id: Mapped[int] = mapped_column(sa.ForeignKey("comment.id"), nullable=False)
+    comment: Mapped["Comment"] = relationship(back_populates="images")
+    
+    
+class Comment(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    text: Mapped[str] = mapped_column(sa.Text, nullable=False)
+    images: Mapped[list["CommentImage"]] = relationship(back_populates="comment", cascade="all, delete-orphan")
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow)
+    
+    commenter_id: Mapped[int] = mapped_column(sa.ForeignKey("user.id"), nullable=False)
+    commenter: Mapped["User"] = relationship(back_populates="comments")
+    
+    listing_id: Mapped[int] = mapped_column(sa.ForeignKey("listing.id"), nullable=False)
+    listing: Mapped["Listing"] = relationship(back_populates="comments")
+    
+    

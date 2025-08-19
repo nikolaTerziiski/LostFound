@@ -1,0 +1,14 @@
+{#  app/templates/_macros.html  #}
+{% macro status_color(status) -%}
+    {%- set colors = {
+        'LOST':     'danger',
+        'FOUND':    'warning',
+        'RETURNED': 'success'
+    } -%}
+    <span class="badge bg-{{ colors.get(status, 'secondary') }}">
+        {%- if   status == 'LOST'      -%}  Изгубено
+        {%- elif status == 'FOUND'     -%}  Намерено
+        {%- elif status == 'RETURNED'  -%}  Върнато
+        {%- else -%} {{ status }} {%- endif -%}
+    </span>
+{%- endmacro %}

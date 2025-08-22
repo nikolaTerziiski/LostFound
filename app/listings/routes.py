@@ -64,8 +64,7 @@ def create():
         category_id = request.form.get("category_id")
         coordinateX = request.form.get("coordinateX")
         coordinateY = request.form.get("coordinateY")
-        date_event_str = request.form.get("date_event") # Взимаме датата като текст
-
+        date_event_str = request.form.get("date_event")
         contact_name = request.form.get("contact_name")
         contact_phone = request.form.get("contact_phone")
         contact_email = request.form.get("contact_email")
@@ -161,3 +160,10 @@ def delete(listing_id: int):
     db.session.commit()
     flash("Обявата беше изтрита успешно.", "success")
     return redirect(url_for("listings.index"))
+
+
+@listings_bp.route("/map", method=["GET"])
+def show_map():
+    listings = Listing.query.all()
+    
+    return render_template("listings/map.html", listings)

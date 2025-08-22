@@ -12,7 +12,7 @@
   {% block head %}{% endblock %}
   <style>.form-error{font-size:.9rem}</style>
 </head>
-<body class="bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container">
       <a class="navbar-brand fw-semibold" href="{{ url_for('main.index') }}">Lost &amp; Found</a>
@@ -28,7 +28,7 @@
         </ul>
         <ul class="navbar-nav ms-auto">
           {% if current_user.is_authenticated %}
-            <li class="nav-item"><span class="navbar-text me-2">Здравей, {{ current_user.email }}</span></li>
+            <li class="nav-item"><span class="nav-link disable navbar-text me-2">Здравей, {{ current_user.email }}</span></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Изход</a></li>
           {% else %}
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Вход</a></li>
@@ -39,7 +39,7 @@
     </div>
   </nav>
 
-  <main class="container">
+  <main class="container flex-shrink-0">
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
         <div class="mb-3">
@@ -55,7 +55,18 @@
 
     {% block content %}{% endblock %}
   </main>
-
+  <footer class="bg-light text-center text-muted py-3 border-top mt-auto">
+  <div class="container">
+    <small>
+      Lost &amp; Found &copy; {{ current_year }} — 
+      <a href="{{ url_for('main.index') }}" class="text-decoration-none">Начало</a>
+      |
+      <a href="{{ url_for('listings.index') }}" class="text-decoration-none">Обяви</a>
+      |
+      <a href="{{ url_for('listings.map') }}" class="text-decoration-none">Карта</a>
+    </small>
+  </div>
+  </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <!--Това е за библиотеката за картите-->

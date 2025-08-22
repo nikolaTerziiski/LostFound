@@ -162,8 +162,8 @@ def delete(listing_id: int):
     return redirect(url_for("listings.index"))
 
 
-@listings_bp.route("/map", method=["GET"])
-def show_map():
+@listings_bp.route("/map", methods=["GET"])
+def map():
     listings = Listing.query.all()
     
-    return render_template("listings/map.html", listings)
+    return render_template("listings/map.html", listings=listings)

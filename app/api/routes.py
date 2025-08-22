@@ -1,6 +1,8 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, url_for
+from datetime import date
 from ..extensions import db
 from ..models import Listing
+
 
 bp = Blueprint("api", __name__)
 
@@ -18,5 +20,7 @@ def api_listings():
             "lng": it.coordinateY,
             "location_name": it.location_name,
             "url": f"/listings/{it.id}",
+            "picture": url_for('uploaded_file', filename=it.images[0].image_path) if len(it.images) > 0 else None,
+            "date": it.created_at.strftime("%d.%m.%Y %H:%M")
         })
     return jsonify(data)

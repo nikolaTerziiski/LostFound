@@ -7,74 +7,76 @@
 
     {% if listing.images %}
     {% if listing.images|length > 1 %}
-        <div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
-            <div class="carousel-inner">
-                {% for image in listing.images %}
-                <div class="carousel-item {{ 'active' if loop.first }}">
-                    <img src="{{ url_for('uploaded_file', filename=image.image_path) }}" class="d-block w-100 rounded" style="max-height: 500px; object-fit: cover;" alt="Снимка {{ loop.index }}">
-                </div>
-                {% endfor %}
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Предишна</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Следваща</span>
-            </button>
+    <div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
+      <div class="carousel-inner">
+        {% for image in listing.images %}
+        <div class="carousel-item {{ 'active' if loop.first }}">
+          <img src="{{ url_for('uploaded_file', filename=image.image_path) }}" class="d-block w-100 rounded"
+            style="max-height: 500px; object-fit: cover;" alt="Снимка {{ loop.index }}">
         </div>
+        {% endfor %}
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Предишна</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Следваща</span>
+      </button>
+    </div>
     {% else %}
-        <img src="{{ url_for('uploaded_file', filename=listing.images[0].image_path) }}" class="img-fluid rounded mb-3" style="width: 100%; height: auto;" alt="{{ listing.title }}">
+    <img src="{{ url_for('uploaded_file', filename=listing.images[0].image_path) }}" class="img-fluid rounded mb-3"
+      style="width: 100%; height: auto;" alt="{{ listing.title }}">
     {% endif %}
-{% else %}
-    <img src="{{ url_for('static', filename='images/No_Image_Available.jpg') }}" class="img-fluid rounded mb-3" alt="Няма снимка">
-{% endif %}
+    {% else %}
+    <img src="{{ url_for('static', filename='images/No_Image_Available.jpg') }}" class="img-fluid rounded mb-3"
+      alt="Няма снимка">
+    {% endif %}
 
     <h3 class="card-title">{{ listing.title }}</h3>
     <h6 class="card-subtitle mb-2 text-muted">
       Категория: {{ listing.category.name }} • Статус: {{ utils.status_color(listing.status) }}
     </h6>
-    
+
     {% if listing.date_event %}
-        <p class="text-muted">Обявено за изгубено на: {{ listing.date_event.strftime('%d.%m.%Y') }}</p>
+    <p class="text-muted">Обявено за изгубено на: {{ listing.date_event.strftime('%d.%m.%Y') }}</p>
     {% endif %}
 
     <p class="card-text">{{ listing.description }}</p>
 
     {% if listing.coordinateX and listing.coordinateY %}
     <div class="mb-3">
-        <label class="form-label">Последно видяно или изгубено</label>
-        <div id="map-display-details" 
-             style="height: 300px; z-index: 0;" 
-             class="rounded"
-             data-lat="{{ listing.coordinateX }}"
-             data-lng="{{ listing.coordinateY }}">
-        </div>
+      <label class="form-label">Последно видяно или изгубено</label>
+      <div id="map-display-details" style="height: 300px; z-index: 0;" class="rounded"
+        data-lat="{{ listing.coordinateX }}" data-lng="{{ listing.coordinateY }}">
+      </div>
     </div>
     {% endif %}
 
     <hr>
     {% if current_user.is_authenticated %}
-        <h5>Данни за контакт:</h5>
-        <ul class="list-unstyled">
-            {% if listing.contact_name %}<li><strong>Име:</strong> {{ listing.contact_name }}</li>{% endif %}
-            {% if listing.contact_phone %}<li><strong>Телефон:</strong> {{ listing.contact_phone }}</li>{% endif %}
-            {% if listing.contact_email %}<li><strong>Имейл:</strong> {{ listing.contact_email }}</li>{% endif %}
-        </ul>
+    <h5>Данни за контакт:</h5>
+    <ul class="list-unstyled">
+      {% if listing.contact_name %}<li><strong>Име:</strong> {{ listing.contact_name }}</li>{% endif %}
+      {% if listing.contact_phone %}<li><strong>Телефон:</strong> {{ listing.contact_phone }}</li>{% endif %}
+      {% if listing.contact_email %}<li><strong>Имейл:</strong> {{ listing.contact_email }}</li>{% endif %}
+    </ul>
     {% else %}
-        <div class="alert alert-warning">
-            Данните за контакт са видими само за <a href="{{ url_for('auth.login') }}">регистрирани</a> потребители.
-        </div>
+    <div class="alert alert-warning">
+      Данните за контакт са видими само за <a href="{{ url_for('auth.login') }}">регистрирани</a> потребители.
+    </div>
     {% endif %}
 
 
     <div class="d-flex gap-2 mt-3">
-      {% if current_user.is_authenticated and (current_user.id == listing.owner_id or current_user.role.value == 'admin') %}
-        <a class="btn btn-outline-primary" href="{{ url_for('listings.edit', listing_id=listing.id) }}">Редактирай</a>
-        <form method="post" action="{{ url_for('listings.delete', listing_id=listing.id) }}" onsubmit="return confirm('Сигурен ли си?');">
-          <button type="submit" class="btn btn-outline-danger">Изтрий</button>
-        </form>
+      {% if current_user.is_authenticated and (current_user.id == listing.owner_id or current_user.role.value ==
+      'admin') %}
+      <a class="btn btn-outline-primary" href="{{ url_for('listings.edit', listing_id=listing.id) }}">Редактирай</a>
+      <form method="post" action="{{ url_for('listings.delete', listing_id=listing.id) }}"
+        onsubmit="return confirm('Сигурен ли си?');">
+        <button type="submit" class="btn btn-outline-danger">Изтрий</button>
+      </form>
       {% endif %}
       <a class="btn btn-link" href="{{ url_for('listings.index') }}">← Назад</a>
     </div>
@@ -89,83 +91,113 @@
 
     <div class="card-body">
       {% if current_user.is_authenticated %}
-        <form method="post" class="mb-3" novalidate enctype="multipart/form-data">
-          {{ form.hidden_tag() }}
+      <form method="post" class="mb-3" novalidate enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
 
-          <div class="mb-2">
-            {{ form.text(class="form-control", rows="3", placeholder="Напишете коментар...") }}
-            {% for err in form.text.errors %}
-              <div class="text-danger small mt-1">{{ err }}</div>
-            {% endfor %}
-          </div>
-
-          <div class="mb-2">
-            {{ form.images(class="form-control", multiple=True) }}
-            <small class="text-muted">Може да качите няколко файла (JPG/PNG/WebP).</small>
-            {% for err in form.images.errors %}
-              <div class="text-danger small mt-1">{{ err }}</div>
-            {% endfor %}
-          </div>
-
-          <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
-        </form>
-      {% else %}
-        <div class="alert alert-info mb-0">
-          За да оставите коментар, моля <a href="{{ url_for('auth.login', next=request.full_path) }}">влезте</a>.
+        <div class="mb-2">
+          {{ form.text(class="form-control", rows="3", placeholder="Напишете коментар...") }}
+          {% for err in form.text.errors %}
+          <div class="text-danger small mt-1">{{ err }}</div>
+          {% endfor %}
         </div>
+
+        <div class="mb-2">
+          {{ form.images(class="form-control", multiple=True) }}
+          <small class="text-muted">Може да качите няколко файла (JPG/PNG/WebP).</small>
+          {% for err in form.images.errors %}
+          <div class="text-danger small mt-1">{{ err }}</div>
+          {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+      </form>
+      {% else %}
+      <div class="alert alert-info mb-0">
+        За да оставите коментар, моля <a href="{{ url_for('auth.login', next=request.full_path) }}">влезте</a>.
+      </div>
       {% endif %}
     </div>
 
     {% if comments %}
-      <div class="list-group list-group-flush">
-        {% for c in comments %}
-          <div class="list-group-item">
-            <div class="d-flex">
-              <div class="me-3 rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
-                   style="width:36px;height:36px;">
-                {{ (c.commenter.email[0] if c.commenter and c.commenter.email else 'Г')|upper }}
+    <div class="list-group list-group-flush">
+      {% for c in comments %}
+      {% set bg_class =
+      'bg-success-subtle' if c.status.value == 'CONFIRMED'
+      else ('bg-danger-subtle' if c.status.value == 'REJECTED' else '') %}
+
+      <div class="list-group-item {{ bg_class }}">
+        <div class="d-flex">
+          <div class="me-3 rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+            style="width:36px;height:36px;">
+            {{ (c.commenter.email[0] if c.commenter and c.commenter.email else 'Г')|upper }}
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong>{{ c.commenter.email if c.commenter else 'Анонимен' }}</strong>
+                <small class="text-muted">· {{ c.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                {% if c.status.value != 'PENDING' %}
+                <span class="badge {{ 'bg-success' if c.status.value == 'CONFIRMED' else 'bg-danger' }} ms-2">
+                  {{ 'Това е' if c.status.value == 'CONFIRMED' else 'Не е това' }}
+                </span>
+                {% endif %}
               </div>
-              <div class="flex-grow-1">
-                <div class="d-flex justify-content-between">
-                  <div>
-                    <strong>{{ c.commenter.email if c.commenter else 'Анонимен' }}</strong>
-                    <small class="text-muted">· {{ c.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
-                  </div>
-                  {% if current_user.is_authenticated and (current_user.id == c.commenter_id or (current_user.role and current_user.role.value == 'admin')) %}
-                    <form method="post"
-                          action="{{ url_for('listings.delete_comment', listing_id=listing.id, comment_id=c.id) }}"
-                          onsubmit="return confirm('Изтриване на коментара?')">
-                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button class="btn btn-sm btn-outline-danger">Изтрий</button>
-                    </form>
-                  {% endif %}
-                </div>
-                <p class="mb-0 mt-2">{{ c.text }}</p>
-                {% if c.images %}
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                  {% for im in c.images %}
-                    <a href="{{ url_for('uploaded_file', filename=im.image_path) }}" target="_blank">
-                      <img src="{{ url_for('uploaded_file', filename=im.image_path) }}"
-                          alt="comment image {{ loop.index }}"
-                          style="width:120px;height:120px;object-fit:cover;border-radius:8px;">
-                    </a>
-                  {% endfor %}
-                </div>
-              {% endif %}
+
+              <div class="d-flex gap-2">
+                {% if current_user.is_authenticated and (current_user.id == listing.owner_id or (current_user.role and
+                current_user.role.value == 'admin')) and c.status.value == 'PENDING' %}
+                <form method="post"
+                  action="{{ url_for('listings.accept_comment', listing_id=listing.id, comment_id=c.id) }}"
+                  class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-success">Това е</button>
+                </form>
+                <form method="post"
+                  action="{{ url_for('listings.reject_comment', listing_id=listing.id, comment_id=c.id) }}"
+                  class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger">Не е това</button>
+                </form>
+                {% endif %}
+
+                {% if current_user.is_authenticated and (current_user.id == c.commenter_id or (current_user.role and
+                current_user.role.value == 'admin') or current_user.id == listing.owner_id) %}
+                <form method="post"
+                  action="{{ url_for('listings.delete_comment', listing_id=listing.id, comment_id=c.id) }}"
+                  onsubmit="return confirm('Изтриване на коментара?')" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger">Изтрий</button>
+                </form>
+                {% endif %}
               </div>
             </div>
+
+            <p class="mb-0 mt-2">{{ c.text }}</p>
+
+            {% if c.images %}
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              {% for im in c.images %}
+              <a href="{{ url_for('uploaded_file', filename=im.image_path) }}" target="_blank">
+                <img src="{{ url_for('uploaded_file', filename=im.image_path) }}" alt="comment image {{ loop.index }}"
+                  style="width:120px;height:120px;object-fit:cover;border-radius:8px;">
+              </a>
+              {% endfor %}
+            </div>
+            {% endif %}
           </div>
-        {% endfor %}
+        </div>
       </div>
+      {% endfor %}
+    </div>
     {% else %}
-      <div class="card-footer text-muted">
-        Все още няма коментари за това търсене.
-      </div>
+    <div class="card-footer text-muted">
+      Все още няма коментари за това търсене.
+    </div>
     {% endif %}
   </div>
 </section>
 {% endblock %}
 {% block scripts %}
-  {{ super() }}
-  <script src="{{ url_for('static', filename='js/map-edit.js') }}"></script>
+{{ super() }}
+<script src="{{ url_for('static', filename='js/map-edit.js') }}"></script>
 {% endblock %}

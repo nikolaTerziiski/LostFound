@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, abort, current_app
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import Listing, Category, Status, ListingImage, Comment, Town, CommentImage
+from app.models import Listing, Category, Status, ListingImage, Comment, Town, CommentImage, CommentStatus
 from . import listings_bp
 from sqlalchemy import or_, func
 from werkzeug.utils import secure_filename
@@ -62,6 +62,7 @@ def index():
 def detail(listing_id: int):
     listing = Listing.query.get_or_404(listing_id)
     
+    print(listing.status)
     comment_form = CommentForm()
     if comment_form.validate_on_submit():
         if not current_user.is_authenticated:
@@ -209,6 +210,8 @@ def map():
 @login_required
 @listings_bp.route("/comment/<int:listing_id>/<int:comment_id>", methods=["POST"])
 def delete_comment(listing_id: int, comment_id: int):
+    listing = Listing.query.get_or_404(listing_id)
+    comment = Comment.query.get_or_404(comment_id)
     
     is_admin = getattr(current_user.role, "value", current_user.role) == "admin"
     is_owner_of_listing = listing.owner_id == current_user.id
@@ -216,11 +219,47 @@ def delete_comment(listing_id: int, comment_id: int):
     
     if not (is_admin or is_owner_of_listing or is_owner_of_comment):
         abort(403)
-    listing = Listing.query.get_or_404(listing_id)
     
-    comment = Comment.query.get_or_404(comment_id)
     
     db.session.delete(comment)
     db.session.commit()
     flash("Коментарът е изтрит.", "success")
     return redirect(url_for("listings.detail", listing_id=listing.id))
+
+
+@login_required
+@listings_bp.post("/comment/<int:listing_id>/<int:comment_id>/accept")
+def accept_comment(listing_id: int, comment_id: int):
+
+    comment = Comment.query.get_or_404(comment_id)
+    listing = Listing.query.get_or_404(listing_id)
+    
+    print(listing.status)
+    
+    if not (current_user.is_authenticated and listing.owner_id == current_user.id):
+        abort(403)
+        
+    if comment.status == CommentStatus.PENDING:
+        comment.status = CommentStatus.CONFIRMED
+        listing.status = Status.FOUND
+        db.session.commit()
+        flash("Вашата вещ е успешно намерена!", "success")
+    
+    return redirect(url_for("listings.detail", listing_id=listing_id))
+
+@listings_bp.post("/listing/<int:listing_id>/comment/<int:comment_id>/reject")
+@login_required
+def reject_comment(listing_id: int, comment_id: int):
+    listing = Listing.query.get_or_404(listing_id)
+    comment = Comment.query.get_or_404(comment_id)
+
+    if not (current_user.is_authenticated and listing.owner_id == current_user.id):
+        abort(403)
+
+    if comment.status == CommentStatus.PENDING:
+        comment.status = CommentStatus.REJECTED
+        db.session.commit()
+        flash("Коментарът е отбелязан като „Не е това“.", "info")
+
+    return redirect(url_for("listings.detail", listing_id=listing.id))
+    

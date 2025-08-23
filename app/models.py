@@ -27,6 +27,11 @@ class Status(str, Enum):
     FOUND = "FOUND"
     RETURNED = "RETURNED"
     
+class CommentStatus(str, Enum):
+    PENDING = "PENDING"
+    CONFIRMED = "CONFIRMED"
+    REJECTED = "REJECTED"
+    
     
 class User(db.Model, UserMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -115,5 +120,7 @@ class Comment(db.Model):
     
     listing_id: Mapped[int] = mapped_column(sa.ForeignKey("listing.id"), nullable=False)
     listing: Mapped["Listing"] = relationship(back_populates="comments")
+    
+    status: Mapped[CommentStatus] = mapped_column(sa.Enum(CommentStatus), nullable=False, default=CommentStatus.PENDING, server_default="PENDING")
     
     

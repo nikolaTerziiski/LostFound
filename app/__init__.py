@@ -9,6 +9,7 @@ from .auth.routes import bp as auth_bp
 from .listings.routes import listings_bp
 from .errors import errors_bp
 from .main.routes import bp as main_bp
+from .admin.routes import admin_bp
 
 import os
 
@@ -31,7 +32,7 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(listings_bp)
     app.register_blueprint(errors_bp)
-    
+    app.register_blueprint(admin_bp)
     @app.route('/uploads/<filename>')
     def uploaded_file(filename):
         upload_dir = os.path.join(app.root_path, '..', app.config['UPLOAD_PICTURES'])

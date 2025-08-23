@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="row">
+    <aside class="col-md-3 col-lg-2 mb-3">
+      <div class="list-group shadow-sm">
+        <a class="list-group-item list-group-item-action {% if tab=='overview' %}active{% endif %}"
+           href="{{ url_for('admin.dashboard', tab='overview') }}">Overview</a>
+        <a class="list-group-item list-group-item-action {% if tab=='users' %}active{% endif %}"
+           href="{{ url_for('admin.dashboard', tab='users') }}">Users</a>
+        <a class="list-group-item list-group-item-action {% if tab=='listings' %}active{% endif %}"
+           href="{{ url_for('admin.dashboard', tab='listings') }}">Listings</a>
+      </div>
+    </aside>
+    <main class="col-md-9 col-lg-10">
+      {% if tab == 'overview' %}
+      <div class="row g-3">
+        <div class="col-sm-6 col-lg-4">
+          <div class="card shadow-sm"><div class="card-body">
+            <div class="text-muted small">Общо потребители</div>
+            <div class="display-6">{{ total_users }}</div>
+          </div></div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <div class="card shadow-sm"><div class="card-body">
+            <div class="text-muted small">Общо обяви</div>
+            <div class="display-6">{{ total_listings }}</div>
+          </div></div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card shadow-sm h-100"><div class="card-body">
+            <div class="text-muted small mb-2">Обяви по статус</div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between"><span>LOST</span><span>{{ status_counts.get('LOST',0) }}</span></li>
+              <li class="list-group-item d-flex justify-content-between"><span>FOUND</span><span>{{ status_counts.get('FOUND',0) }}</span></li>
+              <li class="list-group-item d-flex justify-content-between"><span>RETURNED</span><span>{{ status_counts.get('RETURNED',0) }}</span></li>
+            </ul>
+          </div></div>
+        </div>
+      </div>
+
+      {% elif tab == 'users' %}
+      <div class="card shadow-sm">
+        <div class="card-header"><h5 class="mb-0">Потребители</h5></div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>ID</th><th>Email</th><th>Роля</th><th>Регистрация</th><th class="text-end"># Обяви</th></tr></thead>
+            <tbody>
+              {% for u in users %}
+              <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.email }}</td>
+                <td><span class="badge bg-{% if u.role=='admin' %}danger{% else %}secondary{% endif %}">{{ u.role }}</span></td>
+                <td>{{ u.created_at.strftime("%d.%m.%Y") if u.created_at }}</td>
+                <td class="text-end">{{ u.listings|length }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {% elif tab == 'listings' %}
+      <div class="card shadow-sm">
+        <div class="card-header"><h5 class="mb-0">Обяви</h5></div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>ID</th><th>Заглавие</th><th>Категория</th><th>Статус</th><th>Град</th><th>Собственик</th><th>Създадена</th></tr></thead>
+            <tbody>
+              {% for l in listings %}
+              <tr>
+                <td>{{ l.id }}</td>
+                <td class="text-truncate" style="max-width: 280px;">
+                  <a href="{{ url_for('listings.detail', listing_id=l.id) }}" class="link-primary">{{ l.title }}</a>
+                </td>
+                <td>{{ l.category.name if l.category }}</td>
+                <td><span class="badge
+                  {% if l.status.name=='LOST' %}bg-warning text-dark
+                  {% elif l.status.name=='FOUND' %}bg-info text-dark
+                  {% elif l.status.name=='RETURNED' %}bg-success
+                  {% else %}bg-secondary{% endif %}">
+                  {{ l.status.name }}</span>
+                </td>
+                <td>{{ l.town.name if l.town }}</td>
+                <td>{{ l.owner.email if l.owner }}</td>
+                <td>{{ l.created_at.strftime("%d.%m.%Y") if l.created_at }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+{% endblock %}

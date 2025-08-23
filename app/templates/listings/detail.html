@@ -125,6 +125,7 @@
                     <form method="post"
                           action="{{ url_for('listings.delete_comment', listing_id=listing.id, comment_id=c.id) }}"
                           onsubmit="return confirm('Изтриване на коментара?')">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button class="btn btn-sm btn-outline-danger">Изтрий</button>
                     </form>
                   {% endif %}

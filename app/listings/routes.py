@@ -199,7 +199,13 @@ def map():
     return render_template("listings/map.html", listings=listings)
 
 
-@listings_bp.route("/comment/<int:listing_id>", methods=["POST"])
-def delete_comment(listing_id: int):
+@listings_bp.route("/comment/<int:listing_id>/<int:comment_id>", methods=["POST"])
+def delete_comment(listing_id: int, comment_id: int):
     listing = Listing.query.get_or_404(listing_id)
-    return render_template(url_for("listings.detail", listing_id=listing.id))
+    
+    comment = Comment.query.get_or_404(comment_id)
+    
+    db.session.delete(comment)
+    db.session.commit()
+    flash("Коментарът е изтрит.", "success")
+    return redirect(url_for("listings.detail", listing_id=listing.id))

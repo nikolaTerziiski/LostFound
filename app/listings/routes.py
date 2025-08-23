@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from app.models import Listing, Category, Status, ListingImage, Comment
 from . import listings_bp
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from PIL import Image
@@ -41,8 +41,8 @@ def index():
     
     if(search_query):
         query = query.filter(or_(
-            Listing.title.ilike(f"%{search_query.lower()}%"),
-            Listing.description.lower().ilike(f"%{search_query.lower()}%")))
+            func.lower(Listing.title.ilike(f"%{search_query.lower()}%")),
+            func.lower(Listing.description.lower().ilike(f"%{search_query.lower()}%"))))
         
     if (category_input):
         query = query.filter_by(category_id=category_input)

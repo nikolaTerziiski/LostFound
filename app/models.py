@@ -11,7 +11,7 @@ from .extensions import db
 
 class Town(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name = Mapped[str] = mapped_column(sa.String(255), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(sa.String(255), unique=True, nullable=False)
     
     users: Mapped[list["User"]] = relationship(back_populates="town")
     
@@ -39,7 +39,7 @@ class User(db.Model, UserMixin):
     # по-добра типизация с back_populates
     listings: Mapped[list["Listing"]] = relationship(back_populates="owner")
     
-    town_id: Mapped[int] = mapped_column(sa.ForeignKey("town.id"), nullable=False, index=True)
+    town_id: Mapped[int | None] = mapped_column(sa.ForeignKey("town.id", ondelete="SET NULL"), nullable=True, index=True)
     town: Mapped["Town"] = relationship(back_populates="users")
     
     def set_password(self, password: str) -> None:
@@ -54,7 +54,7 @@ class Listing(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     description: Mapped[str] = mapped_column(sa.Text(), nullable=False)
-    status: Mapped[Status] = mapped_column(sa.Enum(Status), default=Status.LOST, nullable=False)
+    status: Mapped[Status] = mapped_column(sa.Enum(Status), name="status_enum", default=Status.LOST, nullable=False)
 
     coordinateX:  Mapped[float | None] = mapped_column(sa.Float(), index=True)
     coordinateY: Mapped[float | None] = mapped_column(sa.Float(), index=True)
@@ -78,7 +78,7 @@ class Listing(db.Model):
     category_id: Mapped[int] = mapped_column(sa.ForeignKey("category.id"), nullable=False, index=True)
     category: Mapped["Category"] = relationship(back_populates="listings")
     
-    town_id: Mapped[int] = mapped_column(sa.ForeignKey("town.id"), nullable=False, index=True)
+    town_id: Mapped[int | None] = mapped_column(sa.ForeignKey("town.id", ondelete="SET NULL"), nullable=True, index=True)
     town: Mapped["Town"] = relationship(back_populates="listings")
     
 class Category(db.Model):
@@ -106,7 +106,7 @@ class CommentImage(db.Model):
     
 class Comment(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    text: Mapped[str] = mapped_column(sa.Text, nullable=False)
+    text: Mapped[str] = mapped_column(sa.Text(), nullable=False)
     images: Mapped[list["CommentImage"]] = relationship(back_populates="comment", cascade="all, delete-orphan")
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow)
     

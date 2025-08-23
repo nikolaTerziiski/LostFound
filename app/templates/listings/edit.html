@@ -2,6 +2,7 @@
 {% block content %}
 <h2>Редакция на обява</h2>
 <form method="post" class="mt-3">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="mb-3">
     <label class="form-label">Заглавие</label>
     <input class="form-control" type="text" name="title" value="{{ listing.title }}" required>

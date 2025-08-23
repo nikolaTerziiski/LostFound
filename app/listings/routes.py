@@ -41,8 +41,8 @@ def index():
     
     if(search_query):
         query = query.filter(or_(
-            Listing.title.ilike(f"%{search_query}"),
-            Listing.description.lower().ilike(f"%{search_query.lower()}")))
+            Listing.title.ilike(f"%{search_query.lower()}%"),
+            Listing.description.lower().ilike(f"%{search_query.lower()}%")))
         
     if (category_input):
         query = query.filter_by(category_id=category_input)

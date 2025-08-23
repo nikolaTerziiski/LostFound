@@ -1,7 +1,7 @@
 # app/__init__.py
 from flask import Flask, send_from_directory
 from .config import Config
-from .extensions import db, migrate, login_manager, mail
+from .extensions import db, migrate, login_manager, mail, csrf
 from . import models
 from .models import User
 from .api.routes import bp as api_bp
@@ -18,6 +18,7 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)      
     mail.init_app(app)
+    csrf.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
 

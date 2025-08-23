@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const html_for_hovering = listing.picture
         ? `<div class="listing-content" style="max-width:250px"><img src="${listing.picture}" width="100" style="border-radius:4px;display:block"><div class="lf-title">${listing.title ?? ''}</div>
       <div class="lf-date">Изгубено на: ${listing.date ?? ''}</div></div>`
-        : (listing.title ?? '');
+        : `<div class="listing-content" style="max-width:250px"><div class="lf-title">${listing.title ?? ''}</div>
+      <div class="lf-date">Изгубено на: ${listing.date ?? ''}</div></div>`;
         const m = L.marker([lat, lng]).addTo(map);
         m.bindTooltip(html_for_hovering, {direction: 'top', sticky:true, className:'listing-content'})
 

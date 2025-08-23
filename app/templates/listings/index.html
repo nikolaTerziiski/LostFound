@@ -17,6 +17,15 @@
       </option>
     {% endfor %}
   </select>
+  <select name="town" class="form-select" style="max-width: 200px;">
+    <option value="">-- Избери град --</option>
+    {% for t in towns %}
+      <option value="{{ t.id }}" 
+          {{ 'selected' if t.id==town }}>
+        {{ t.name }}
+      </option>
+    {% endfor %}
+  </select>
     <button type="submit" class="btn btn-primary">Търси</button>
 </form>
 <div class="list-group">

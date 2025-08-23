@@ -1,21 +1,31 @@
 from app import create_app
 from app.extensions import db
-# Важно: Импортираме и новия модел ListingImage, въпреки че няма да го ползваме тук
-from app.models import User, Listing, Status, Role, Category, ListingImage
+from app.models import User, Listing, Status, Role, Category, ListingImage, Town
 from datetime import date
 
 app = create_app()
 
 with app.app_context():
-    # 1) Създава "admin" потребител само ако не съществува
+    towns_seed = ["София", "Пловдив", "Варна", "Бургас"]
+    towns_by_name: dict[str, Town] = {}
+    for name in towns_seed:
+        t = Town.query.filter_by(name=name).first()
+        if not t:
+            t = Town(name=name)
+            db.session.add(t)
+            db.session.flush()  
+        towns_by_name[name] = t
+
     admin = User.query.filter_by(email="admin@admin.com").first()
     if not admin:
-        admin = User(email="admin@admin.com", role=Role.ADMIN)
+        admin = User(email="admin@admin.com", role=Role.ADMIN, town=towns_by_name["София"])
         admin.set_password("admin")
         db.session.add(admin)
         db.session.flush()
+    else:
+        if admin.town is None:
+            admin.town = towns_by_name["София"]
 
-    
     fixed_categories = ["Животно", "Предмет", "Ключове"]
     categories: dict[str, Category] = {}
     for name in fixed_categories:
@@ -25,8 +35,7 @@ with app.app_context():
             db.session.add(cat)
             db.session.flush()
         categories[name] = cat
-        
-    # 2) Създава примерни обяви, само ако липсват
+
     if not Listing.query.first():
         l1 = Listing(
             title="Изгубено портмоне",
@@ -36,7 +45,8 @@ with app.app_context():
             coordinateX=42.688,
             coordinateY=23.319,
             date_event=date.today(),
-            owner=admin
+            owner=admin,
+            town=towns_by_name["София"],
         )
         l2 = Listing(
             title="Намерена котка",
@@ -46,7 +56,8 @@ with app.app_context():
             coordinateX=42.650,
             coordinateY=23.377,
             date_event=date.today(),
-            owner=admin
+            owner=admin,
+            town=towns_by_name["София"],
         )
         l3 = Listing(
             title="Намерени ключове",
@@ -56,10 +67,17 @@ with app.app_context():
             coordinateX=42.693,
             coordinateY=23.335,
             date_event=date.today(),
-            owner=admin
+            owner=admin,
+            town=towns_by_name["София"],
         )
         db.session.add_all([l1, l2, l3])
         db.session.commit()
-        print("Seed OK")
+        print("Seed OK (towns, admin, categories, listings)")
     else:
-        print("Already seeded")
+        updated = 0
+        for l in Listing.query.filter(Listing.town_id.is_(None)).all():
+            l.town = towns_by_name["София"]
+            updated += 1
+        if updated:
+            db.session.commit()
+        print(f"Already seeded (backfilled town for {updated} listings)")

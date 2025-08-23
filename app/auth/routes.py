@@ -1,9 +1,10 @@
 from flask import render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, login_required, current_user
 from . import bp
 from .. import db
-from ..models import User
+from ..models import User, Town, Listing, Status
 from .forms import LoginForm, RegistrationForm
+
 
 
 @bp.route('/register', methods=['GET', 'POST'])
@@ -44,6 +45,53 @@ def login():
     return render_template('auth/login.html', title='Вход', form=form)
 
 @bp.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for('main.index'))
+
+
+@bp.route("/account", methods=["GET", "POST"])
+def account():
+    tab = request.args.get("tab", "settings")
+    towns = Town.query.order_by(Town.name.asc()).all()
+
+    if request.method == "POST" and tab == "settings":
+        town_id = request.form.get("town_id", type=int)
+        if town_id:
+            town = Town.query.get(town_id)
+            if town:
+                current_user.town = town
+
+        old = (request.form.get("old_password") or "").strip()
+        new = (request.form.get("new_password") or "").strip()
+        rep = (request.form.get("repeat_password") or "").strip()
+
+        if old or new or rep:
+            if not current_user.check_password(old):
+                flash("Невалидна текуща парола.", "danger")
+                return redirect(url_for("auth.account", tab="settings"))
+            if not new or len(new) < 5:
+                flash("Новата парола трябва да е поне 5 символа.", "warning")
+                return redirect(url_for("auth.account", tab="settings"))
+            if new != rep:
+                flash("Паролите не съвпадат.", "warning")
+                return redirect(url_for("auth.account", tab="settings"))
+            current_user.set_password(new)
+            flash("Паролата е сменена.", "success")
+
+        db.session.commit()
+        flash("Профилът е обновен.", "success")
+        return redirect(url_for("auth.account", tab="settings"))
+
+    user_listings_q = Listing.query.filter_by(owner_id=current_user.id).order_by(Listing.created_at.desc())
+    active_listings   = user_listings_q.filter(Listing.status != Status.RETURNED).all()
+    finished_listings = user_listings_q.filter(Listing.status == Status.RETURNED).all()
+
+    return render_template(
+        "auth/account.html",
+        tab=tab,
+        towns=towns,
+        active_listings=active_listings,
+        finished_listings=finished_listings,
+    )

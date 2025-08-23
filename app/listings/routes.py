@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, abort, current_app
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import Listing, Category, Status, ListingImage, Comment
+from app.models import Listing, Category, Status, ListingImage, Comment, Town
 from . import listings_bp
 from sqlalchemy import or_, func
 from werkzeug.utils import secure_filename
@@ -34,6 +34,7 @@ def index():
     
     search_query = request.args.get('q', '')
     category_input = request.args.get('category', type=int)
+    town = request.args.get('town', type=int)
     
     query = Listing.query.order_by(Listing.created_at.desc())
     categories = Category.query.order_by(Category.name.asc())
@@ -47,9 +48,15 @@ def index():
     if (category_input):
         query = query.filter_by(category_id=category_input)
     
+    if (town):
+        query = query.filter(Listing.town_id == town)
+    
     pagination = query.paginate(page=page, per_page=10, error_out=False)
+    towns = Town.query.order_by(Town.name.asc()).all()
     listings = pagination.items
-    return render_template("listings/index.html", listings=listings, pagination=pagination, search_query=search_query, categories=categories, category_id=category_input)
+    
+    print(town)
+    return render_template("listings/index.html", listings=listings, pagination=pagination, search_query=search_query, categories=categories, towns=towns, category_id=category_input, town=town)
 
 @listings_bp.route('/<int:listing_id>', methods=["GET", "POST"])
 def detail(listing_id: int):

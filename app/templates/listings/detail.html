@@ -28,7 +28,7 @@
         <img src="{{ url_for('uploaded_file', filename=listing.images[0].image_path) }}" class="img-fluid rounded mb-3" style="width: 100%; height: auto;" alt="{{ listing.title }}">
     {% endif %}
 {% else %}
-    <img src="{{ url_for('static', filename='images/No_Image_Available.png') }}" class="img-fluid rounded mb-3" alt="Няма снимка">
+    <img src="{{ url_for('static', filename='images/No_Image_Available.jpg') }}" class="img-fluid rounded mb-3" alt="Няма снимка">
 {% endif %}
 
     <h3 class="card-title">{{ listing.title }}</h3>

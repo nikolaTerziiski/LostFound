@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-4">
+  <div class="row">
+    <div class="col-md-3 mb-3">
+      <div class="list-group">
+        <a class="list-group-item list-group-item-action {% if tab=='settings' %}active{% endif %}"
+           href="{{ url_for('auth.account', tab='settings') }}">
+          Settings
+        </a>
+        <a class="list-group-item list-group-item-action {% if tab=='listings' %}active{% endif %}"
+           href="{{ url_for('auth.account', tab='listings') }}">
+          Listings
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      {% if tab == 'settings' %}
+      <div class="card">
+        <div class="card-header">Profile Settings</div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('auth.account', tab='settings') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input class="form-control" value="{{ current_user.email }}" disabled>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Град</label>
+              <select name="town_id" class="form-select" required>
+                <option value="">-- Избери град --</option>
+                {% for t in towns %}
+                  <option value="{{ t.id }}" {% if current_user.town and t.id == current_user.town.id %}selected="selected"{% endif %}>
+                    {{ t.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <hr>
+            <h6 class="text-muted">Смяна на парола (по желание)</h6>
+            <div class="mb-3">
+              <label class="form-label">Текуща парола</label>
+              <input type="password" name="old_password" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Нова парола</label>
+              <input type="password" name="new_password" class="form-control" minlength="5">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Повтори новата парола</label>
+              <input type="password" name="repeat_password" class="form-control" minlength="5">
+            </div>
+
+            <button class="btn btn-primary" type="submit">Запази</button>
+          </form>
+        </div>
+      </div>
+
+      {% elif tab == 'listings' %}
+      <div class="card">
+        <div class="card-header">Моите обяви</div>
+        <div class="card-body">
+          <h6 class="text-muted mb-2">Активни</h6>
+          <div class="list-group mb-3">
+            {% for l in active_listings %}
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                 href="{{ url_for('listings.detail', listing_id=l.id) }}">
+                <div>
+                  <div class="fw-bold">{{ l.title }}</div>
+                  <small class="text-muted">
+                    {{ l.category.name }} · {{ l.status }}{% if l.town %} · {{ l.town.name }}{% endif %}
+                  </small>
+                </div>
+              </a>
+                <div class="ms-3" style="margin-top: 5px;">
+                  <a href="{{ url_for('listings.edit', listing_id=l.id) }}" class="btn btn-sm btn-outline-secondary">Редактирай</a>
+                </div>
+              </a>
+              <hr>
+            {% else %}
+              <div class="text-muted small">Няма активни обяви.</div>
+            {% endfor %}
+          </div>
+
+          <h6 class="text-muted mb-2">Приключени</h6>
+          <div class="list-group">
+            {% for l in finished_listings %}
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                 href="{{ url_for('listings.detail', listing_id=l.id) }}">
+                <div>
+                  <div class="fw-bold">{{ l.title }}</div>
+                  <small class="text-muted">
+                    {{ l.category.name }} · {{ l.status }}{% if l.town %} · {{ l.town.name }}{% endif %}
+                  </small>
+                </div>
+                <div class="ms-3">
+                  <a href="{{ url_for('listings.edit', listing_id=l.id) }}" class="btn btn-sm btn-outline-secondary">Виж</a>
+                </div>
+              </a>
+            {% else %}
+              <div class="text-muted small">Няма приключени обяви.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

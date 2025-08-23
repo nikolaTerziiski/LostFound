@@ -54,7 +54,7 @@ class Listing(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     description: Mapped[str] = mapped_column(sa.Text(), nullable=False)
-    status: Mapped[Status] = mapped_column(sa.Enum(Status), name="status_enum", default=Status.LOST, nullable=False)
+    status: Mapped[Status] = mapped_column(sa.Enum(Status), default=Status.LOST, nullable=False)
 
     coordinateX:  Mapped[float | None] = mapped_column(sa.Float(), index=True)
     coordinateY: Mapped[float | None] = mapped_column(sa.Float(), index=True)

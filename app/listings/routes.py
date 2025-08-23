@@ -1,12 +1,13 @@
 from flask import render_template, request, redirect, url_for, flash, abort, current_app
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import Listing, Category, Status, ListingImage
+from app.models import Listing, Category, Status, ListingImage, Comment
 from . import listings_bp
 from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from PIL import Image
+from .forms import CommentForm
 import secrets
 import os
 
@@ -50,10 +51,32 @@ def index():
     listings = pagination.items
     return render_template("listings/index.html", listings=listings, pagination=pagination, search_query=search_query, categories=categories, category_id=category_input)
 
-@listings_bp.route('/<int:listing_id>')
+@listings_bp.route('/<int:listing_id>', methods=["GET", "POST"])
 def detail(listing_id: int):
     listing = Listing.query.get_or_404(listing_id)
-    return render_template("listings/detail.html", listing=listing)
+    
+    comment_form = CommentForm()
+    if comment_form.validate_on_submit():
+        if not current_user.is_authenticated:
+            abort(403)
+        
+        comment = Comment(
+            text=comment_form.text.data.strip(),
+            listing_id=listing.id,
+            commenter_id=current_user.id
+        )
+        
+        db.session.add(comment)
+        db.session.commit()
+        flash("Успешно оставихте коментар!", "success")
+        return redirect(url_for("listings.detail", listing_id=listing.id))
+    
+    
+    if request.method == "POST" and not comment_form.validate():
+        flash("Моля, напишете нещо във формата!.", "danger")
+    
+    listings_comment = (Comment.query.filter_by(listing_id=listing.id).order_by(Comment.created_at.asc()).all())
+    return render_template("listings/detail.html", listing=listing, form=comment_form, comments=listings_comment)
 
 @listings_bp.route("/create", methods=["GET", "POST"])
 @login_required
@@ -167,3 +190,9 @@ def map():
     listings = Listing.query.all()
     
     return render_template("listings/map.html", listings=listings)
+
+
+@listings_bp.route("/comment/<int:listing_id>", methods=["POST"])
+def delete_comment(listing_id: int):
+    listing = Listing.query.get_or_404(listing_id)
+    return render_template(url_for("listings.detail", listing_id=listing.id))

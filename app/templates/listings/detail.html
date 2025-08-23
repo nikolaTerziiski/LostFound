@@ -80,6 +80,68 @@
     </div>
   </div>
 </div>
+<section id="comments" class="mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Коментари</h5>
+      <span class="text-muted small">{{ comments|length }}</span>
+    </div>
+
+    <div class="card-body">
+      {% if current_user.is_authenticated %}
+        <form method="post" class="mb-3" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="mb-2">
+            {{ form.text(class="form-control", rows="3", placeholder="Напишете коментар...") }}
+            {% for err in form.text.errors %}
+              <div class="text-danger small mt-1">{{ err }}</div>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+        </form>
+      {% else %}
+        <div class="alert alert-info mb-0">
+          За да оставите коментар, моля <a href="{{ url_for('auth.login', next=request.full_path) }}">влезте</a>.
+        </div>
+      {% endif %}
+    </div>
+
+    {% if comments %}
+      <div class="list-group list-group-flush">
+        {% for c in comments %}
+          <div class="list-group-item">
+            <div class="d-flex">
+              <div class="me-3 rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                   style="width:36px;height:36px;">
+                {{ (c.commenter.email[0] if c.commenter and c.commenter.email else 'Г')|upper }}
+              </div>
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <strong>{{ c.commenter.email if c.commenter else 'Анонимен' }}</strong>
+                    <small class="text-muted">· {{ c.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                  </div>
+                  {% if current_user.is_authenticated and (current_user.id == c.commenter_id or (current_user.role and current_user.role.value == 'admin')) %}
+                    <form method="post"
+                          action="{{ url_for('listings.delete_comment', listing_id=listing.id, comment_id=c.id) }}"
+                          onsubmit="return confirm('Изтриване на коментара?')">
+                      <button class="btn btn-sm btn-outline-danger">Изтрий</button>
+                    </form>
+                  {% endif %}
+                </div>
+                <p class="mb-0 mt-2">{{ c.text }}</p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card-footer text-muted">
+        Все още няма коментари за това търсене.
+      </div>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}
 {% block scripts %}
   {{ super() }}

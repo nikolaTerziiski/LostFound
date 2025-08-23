@@ -8,6 +8,16 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from .extensions import db
 
+
+class Town(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name = Mapped[str] = mapped_column(sa.String(255), unique=True, nullable=False)
+    
+    users: Mapped[list["User"]] = relationship(back_populates="town")
+    
+    listings:Mapped[list["Listing"]] = relationship(back_populates="town")
+    
+
 class Role(str, Enum):
     USER = 'user'
     ADMIN = "admin"
@@ -28,7 +38,10 @@ class User(db.Model, UserMixin):
     comments: Mapped[list["Comment"]] = relationship(back_populates="commenter", cascade="all, delete-orphan")
     # по-добра типизация с back_populates
     listings: Mapped[list["Listing"]] = relationship(back_populates="owner")
-
+    
+    town_id: Mapped[int] = mapped_column(sa.ForeignKey("town.id"), nullable=False, index=True)
+    town: Mapped["Town"] = relationship(back_populates="users")
+    
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
 
@@ -64,6 +77,9 @@ class Listing(db.Model):
     
     category_id: Mapped[int] = mapped_column(sa.ForeignKey("category.id"), nullable=False, index=True)
     category: Mapped["Category"] = relationship(back_populates="listings")
+    
+    town_id: Mapped[int] = mapped_column(sa.ForeignKey("town.id"), nullable=False, index=True)
+    town: Mapped["Town"] = relationship(back_populates="listings")
     
 class Category(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -9,7 +9,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     REMEMBER_COOKIE_DURATION = timedelta(days=7)
     UPLOAD_PICTURES = os.environ.get('UPLOAD_PICTURES', 'uploads')
-    MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 16 MB
+    MAX_CONTENT_LENGTH = 4 * 1024 * 1024
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", "587"))
     MAIL_USE_TLS = True

@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, abort, current_app
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import Listing, Category, Status, ListingImage, Comment, Town
+from app.models import Listing, Category, Status, ListingImage, Comment, Town, CommentImage
 from . import listings_bp
 from sqlalchemy import or_, func
 from werkzeug.utils import secure_filename
@@ -32,7 +32,7 @@ def save_image(form_image):
 def index():
     page = request.args.get("page", 1, type=int)
     
-    search_query = request.args.get('q', '')
+    search_query = request.args.get('q', '').strip()
     category_input = request.args.get('category', type=int)
     town = request.args.get('town', type=int)
     
@@ -74,6 +74,13 @@ def detail(listing_id: int):
         )
         
         db.session.add(comment)
+        db.session.flush()
+        
+        if len(comment_form.images.data) > 0:
+            for file in comment_form.images.data:
+                filename = save_image(file)
+                db.session.add(CommentImage(image_path=filename, comment_id=comment.id))
+        
         db.session.commit()
         flash("Успешно оставихте коментар!", "success")
         return redirect(url_for("listings.detail", listing_id=listing.id))
@@ -199,8 +206,16 @@ def map():
     return render_template("listings/map.html", listings=listings)
 
 
+@login_required
 @listings_bp.route("/comment/<int:listing_id>/<int:comment_id>", methods=["POST"])
 def delete_comment(listing_id: int, comment_id: int):
+    
+    is_admin = getattr(current_user.role, "value", current_user.role) == "admin"
+    is_owner_of_listing = listing.owner_id == current_user.id
+    is_owner_of_comment = comment.commenter_id == current_user.id
+    
+    if not (is_admin or is_owner_of_listing or is_owner_of_comment):
+        abort(403)
     listing = Listing.query.get_or_404(listing_id)
     
     comment = Comment.query.get_or_404(comment_id)

@@ -30,7 +30,7 @@ def notify_all_users(listing: "Listing") -> int:
             <p><b>{listing.title}</b> — {listing.location_name or ''}</p>
             <p><a href="{link}">Виж обявата</a></p>
         """
-    msg = Message(subject=subject, sender=current_app.config["MAIL_DEFAULT_SENDER"], recipients=emails, body=text, html=html)
+    msg = Message(subject=subject, recipients=emails, body=text, html=html)
     mail.send(msg)
     current_app.logger.info("Sent notify for listing %s to %d user(s)", listing.id, len(emails))
     return len(emails)

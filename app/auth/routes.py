@@ -54,6 +54,7 @@ def logout():
 
 
 @bp.route("/account", methods=["GET", "POST"])
+@login_required
 def account():
     tab = request.args.get("tab", "settings")
     towns = Town.query.order_by(Town.name.asc()).all()

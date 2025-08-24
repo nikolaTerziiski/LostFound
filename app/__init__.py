@@ -1,6 +1,6 @@
 # app/__init__.py
 from flask import Flask, send_from_directory
-from .config import Config
+from .config import Config, TestingConfig
 from .extensions import db, migrate, login_manager, mail, csrf
 from . import models
 from .models import User
@@ -13,9 +13,14 @@ from .admin.routes import admin_bp
 
 import os
 
-def create_app(config_class: type[Config] = Config) -> Flask:
+config_by_name = {
+    'development': Config,
+    'testing': TestingConfig
+}
+
+def create_app(config_class: str = 'development') -> Flask:
     app = Flask(__name__)
-    app.config.from_object(config_class)
+    app.config.from_object(config_by_name[config_class])
     db.init_app(app)
     migrate.init_app(app, db)      
     mail.init_app(app)

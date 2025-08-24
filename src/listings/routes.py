@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, abort, current_app
 from flask_login import login_required, current_user
-from app.extensions import db
-from app.models import Listing, Category, Status, ListingImage, Comment, Town, CommentImage, CommentStatus
+from src.extensions import db
+from src.models import Listing, Category, Status, ListingImage, Comment, Town, CommentImage, CommentStatus
 from . import listings_bp
 from sqlalchemy import or_, func
 from werkzeug.utils import secure_filename

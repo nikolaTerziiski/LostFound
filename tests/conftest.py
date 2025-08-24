@@ -1,6 +1,6 @@
 import pytest
-from app import create_app, db
-from app.models import User, Town, Category, Role, Status
+from src import create_app, db
+from src.models import User, Town, Category, Role, Status
 
 @pytest.fixture(scope='module')
 def app():

@@ -3,7 +3,7 @@ from . import admin_required
 from flask_login import login_required
 from ..models import User, Listing
 from sqlalchemy.orm import joinedload
-from app.extensions import db
+from src.extensions import db
 from sqlalchemy import func
 
 

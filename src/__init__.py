@@ -1,4 +1,3 @@
-# app/__init__.py
 from flask import Flask, send_from_directory
 from .config import Config, TestingConfig
 from .extensions import db, migrate, login_manager, mail, csrf
@@ -13,16 +12,14 @@ from .admin.routes import admin_bp
 
 import os
 
-config_by_name = {
-    'development': Config,
-    'testing': TestingConfig
-}
+config_by_name = {'development': Config, 'testing': TestingConfig}
+
 
 def create_app(config_class: str = 'development') -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_class])
     db.init_app(app)
-    migrate.init_app(app, db)      
+    migrate.init_app(app, db)
     mail.init_app(app)
     csrf.init_app(app)
     login_manager.init_app(app)
@@ -31,17 +28,19 @@ def create_app(config_class: str = 'development') -> Flask:
     @login_manager.user_loader
     def load_user(user_id: str):
         return db.session.get(User, int(user_id))
-    
+
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(listings_bp)
     app.register_blueprint(errors_bp)
     app.register_blueprint(admin_bp)
+
     @app.route('/uploads/<filename>')
     def uploaded_file(filename):
-        upload_dir = os.path.join(app.root_path, '..', app.config['UPLOAD_PICTURES'])
-        
+        upload_dir = os.path.join(app.root_path, '..',
+                                  app.config['UPLOAD_PICTURES'])
+
         return send_from_directory(os.path.abspath(upload_dir), filename)
-    
+
     return app

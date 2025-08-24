@@ -16,7 +16,7 @@ convention = {
 
 metadata = MetaData(naming_convention=convention)
 db: SQLAlchemy = SQLAlchemy(metadata=metadata)
-migrate = Migrate()
-login_manager = LoginManager()
-mail = Mail()
-csrf = CSRFProtect()
+migrate: Migrate = Migrate()
+login_manager: LoginManager = LoginManager()
+mail: Mail = Mail()
+csrf: CSRFProtect = CSRFProtect()

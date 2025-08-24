@@ -46,7 +46,7 @@ class User(db.Model, UserMixin):
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow)
 
     comments: Mapped[list["Comment"]] = relationship(back_populates="commenter", cascade="all, delete-orphan")
-    listings: Mapped[list["Listing"]] = relationship(back_populates="owner")
+    listings: Mapped[list["Listing"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     
     town_id: Mapped[int | None] = mapped_column(sa.ForeignKey("town.id", ondelete="SET NULL"), nullable=True, index=True)
     town: Mapped["Town"] = relationship(back_populates="users", foreign_keys=[town_id])

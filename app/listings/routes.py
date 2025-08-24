@@ -10,7 +10,7 @@ from PIL import Image
 from .forms import CommentForm
 import secrets
 import os
-
+from .notifications import notify_all_users
 
 def save_image(form_image):
     hex = secrets.token_hex(8)
@@ -55,7 +55,6 @@ def index():
     towns = Town.query.order_by(Town.name.asc()).all()
     listings = pagination.items
     
-    print(town)
     return render_template("listings/index.html", listings=listings, pagination=pagination, search_query=search_query, categories=categories, towns=towns, category_id=category_input, town=town)
 
 @listings_bp.route('/<int:listing_id>', methods=["GET", "POST"])
@@ -106,6 +105,7 @@ def create():
         contact_name = request.form.get("contact_name")
         contact_phone = request.form.get("contact_phone")
         contact_email = request.form.get("contact_email")
+        town_id = request.form.get("town_id", type=int)
         
         if not title or not description or not category_id:
             flash("Моля, попълни всички задължителни полета.")
@@ -113,6 +113,10 @@ def create():
         
         image_files = request.files.getlist('images')
         image_filename = None    
+        
+        if not Category.query.get(category_id) or not Town.query.get(town_id):
+            flash("Невалидна категория или град.", "danger")
+            return redirect(url_for("listings.create"))
         
         date_event_obj = datetime.strptime(date_event_str, '%Y-%m-%d').date()
         
@@ -127,7 +131,8 @@ def create():
             date_event=date_event_obj,
             contact_name=contact_name,
             contact_phone=contact_phone,
-            contact_email=contact_email
+            contact_email=contact_email,
+            town_id = town_id
         )
         
         for image_file in image_files:
@@ -135,14 +140,16 @@ def create():
                 image_filename = save_image(image_file)
                 new_image = ListingImage(image_path=image_filename, listing=listing)
                 db.session.add(new_image)
-                
+        
         db.session.add(listing)
         db.session.commit()
+        notify_all_users(listing=listing)
         flash("Обявата е създадена успешно!", "success")
         return redirect(url_for("listings.detail", listing_id=listing.id))
     
     categories = Category.query.all()
-    return render_template("listings/create.html", categories=categories)
+    towns = Town.query.all()
+    return render_template("listings/create.html", categories=categories, towns=towns)
     
 @listings_bp.route("/edit/<int:listing_id>", methods=["GET", "POST"])
 @login_required
@@ -209,13 +216,10 @@ def map():
 @listings_bp.route("/<int:listing_id>/returned", methods=["POST"])
 def returned(listing_id: int):
     listing = Listing.query.get_or_404(listing_id)
-    print((current_user.is_authenticated and listing.owner_id == current_user.id))
     if not (current_user.is_authenticated and listing.owner_id == current_user.id):
         abort(403)
         
     listing.status = Status.RETURNED
-    
-    print(listing.status)
     db.session.commit()
     flash("Обявата е отбелязана като НАМЕРЕНА - ЧЕСТИТО!!.", "success")
     return redirect(url_for("listings.detail", listing_id=listing.id))
@@ -248,8 +252,6 @@ def accept_comment(listing_id: int, comment_id: int):
 
     comment = Comment.query.get_or_404(comment_id)
     listing = Listing.query.get_or_404(listing_id)
-    
-    print(listing.status)
     
     if not (current_user.is_authenticated and listing.owner_id == current_user.id):
         abort(403)

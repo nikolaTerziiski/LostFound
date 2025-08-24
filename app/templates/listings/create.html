@@ -22,7 +22,8 @@
       <input class="form-control" type="date" name="date_event" required>
     </div>
   </div>
-  <div class="mb-3">
+  <div class="row">
+      <div class="col-md-6 mb-3">
     <label class="form-label">Категория</label>
     <select class="form-select" name="category_id" required>
       {% for c in categories %}
@@ -30,15 +31,20 @@
       {% endfor %}
     </select>
   </div>
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">coordinateX</label>
-      <input class="form-control" type="number" step="any" name="coordinateX" placeholder="42.69">
-    </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">coordinateY</label>
-      <input class="form-control" type="number" step="any" name="coordinateY" placeholder="23.32">
-    </div>
+  <div class="col-md-6 mb-3">
+  <label class="form-label">Град</label>
+  <select class="form-select" name="town_id" required>
+    {% for t in towns %}
+      <option value="{{ t.id }}">{{ t.name }}</option>
+    {% endfor %}
+  </select>
+  </div>
+
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Локация на картата</label>
+    <div id="map" style="height: 360px; border-radius: 8px;"></div>
+    <div class="form-text">Премести маркера или го дръпни, за да зададеш координати.</div>
   </div>
   <hr class="my-4">
   <h5>Данни за контакт (показват се само на регистрирани потребители)</h5>

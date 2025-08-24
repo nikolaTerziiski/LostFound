@@ -89,7 +89,7 @@ class Listing(db.Model):
     category_id: Mapped[int] = mapped_column(sa.ForeignKey("category.id"), nullable=False, index=True)
     category: Mapped["Category"] = relationship(back_populates="listings")
     
-    town_id: Mapped[int | None] = mapped_column(sa.ForeignKey("town.id", ondelete="SET NULL"), nullable=True, index=True)
+    town_id: Mapped[int | None] = mapped_column(sa.ForeignKey("town.id", ondelete="SET NULL"), nullable=False, index=True)
     town: Mapped["Town"] = relationship(back_populates="listings")
     
 class Category(db.Model):

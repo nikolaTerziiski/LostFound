@@ -1,12 +1,16 @@
+"""Auth forms."""
+
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import (DataRequired, Email, EqualTo, Length,
                                 ValidationError)
-
+from sqlalchemy import select
 from ..models import User
+from ..extensions import db
 
 
 class RegistrationForm(FlaskForm):
+    """Registration form creation"""
     email = StringField("Имейл:",
                         validators=[DataRequired(),
                                     Email(),
@@ -27,11 +31,13 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Регистрирай се")
 
     def validate_email(self, field):
-        if any(User.query.filter_by(email=field.data)):
+        existing = db.session.scalar(select(User).where(User.email == field.data))
+        if existing:
             raise ValidationError("Този имейл вече е регистриран")
 
 
 class LoginForm(FlaskForm):
+    """Login form creation"""
     email = StringField("Имейл:",
                         validators=[DataRequired(),
                                     Email(),

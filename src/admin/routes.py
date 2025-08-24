@@ -18,32 +18,31 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 @admin_required
 def dashboard():
     """Render admin dashboard: overview, users, listings tabs."""
-    #Overview she znachi, che tova e default stoinosta, toest ako otvorqt /admin/ she otvori defakto /admin/overview
+    #Overview she znachi, che tova e default stoinosta, toest ako otvorqt
+    # /admin/ she otvori defakto /admin/overview
     tab = request.args.get("tab", "overview")
 
-    total_users = db.session.scalar(select(func.count()).select_from(User))
-    total_listings = db.session.scalar(select(func.count()).select_from(Listing))
+    total_users = db.session.scalar(select(func.count(User.id)))
+    total_listings = db.session.scalar(
+        select(func.count(Listing.id)))
+    # Групиране по статус
     by_status = db.session.execute(
-        select(Listing.status, func.count(Listing.id)).group_by(Listing.status)
-    ).all()
+        select(Listing.status,
+               func.count(Listing.id)).group_by(Listing.status)).all()
     status_counts = dict(by_status)
 
     users = []
     listings = []
     if tab == "users":
         users = db.session.execute(
-            select(User).order_by(User.created_at.desc())
-        ).scalars().all()
+            select(User).order_by(User.created_at.desc())).scalars().all()
     elif tab == "listings":
         listings = db.session.execute(
-            select(Listing)
-            .options(
+            select(Listing).options(
                 joinedload(Listing.owner),
                 joinedload(Listing.category),
                 joinedload(Listing.town),
-            )
-            .order_by(Listing.created_at.desc())
-        ).scalars().all()
+            ).order_by(Listing.created_at.desc())).scalars().all()
 
     return render_template(
         "admin/dashboard.html",

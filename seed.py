@@ -1,24 +1,29 @@
+"""Seed the database with initial data (towns, categories, admin user, demo listings)."""
+
 from datetime import date
 
 from src import create_app
 from src.extensions import db
-from src.models import (Category, Listing, ListingImage, Role, Status, Town,
-                        User)
+from src.models import Category, Listing, Role, Status, Town, User
+from sqlalchemy import select
 
 app = create_app()
 
 with app.app_context():
     towns_seed = ["София", "Пловдив", "Варна", "Бургас"]
     towns_by_name: dict[str, Town] = {}
+
     for name in towns_seed:
-        t = Town.query.filter_by(name=name).first()
+        stmt = select(Town).where(Town.name == name)
+        t = db.session.execute(stmt).scalar_one_or_none()
         if not t:
             t = Town(name=name)
             db.session.add(t)
-            db.session.flush()  
+            db.session.flush()
         towns_by_name[name] = t
 
-    admin = User.query.filter_by(email="admin@admin.com").first()
+    stmt = select(User).where(User.email == "admin@admin.com")
+    admin = db.session.execute(stmt).scalar_one_or_none()
     if not admin:
         admin = User(email="admin@admin.com", role=Role.ADMIN, town=towns_by_name["София"])
         admin.set_password("admin")
@@ -31,14 +36,17 @@ with app.app_context():
     fixed_categories = ["Животно", "Предмет", "Ключове"]
     categories: dict[str, Category] = {}
     for name in fixed_categories:
-        cat = Category.query.filter_by(name=name).first()
+        stmt = select(Category).where(Category.name == name)
+        cat = db.session.execute(stmt).scalar_one_or_none()
         if not cat:
             cat = Category(name=name)
             db.session.add(cat)
             db.session.flush()
         categories[name] = cat
 
-    if not Listing.query.first():
+    # seed demo listings if empty
+    stmt = select(Listing)
+    if not db.session.execute(stmt).first():
         l1 = Listing(
             title="Изгубено портмоне",
             description="Черно портмоне около НДК.",
@@ -77,7 +85,8 @@ with app.app_context():
         print("Seed OK (towns, admin, categories, listings)")
     else:
         updated = 0
-        for l in Listing.query.filter(Listing.town_id.is_(None)).all():
+        stmt = select(Listing).where(Listing.town_id.is_(None))
+        for l in db.session.execute(stmt).scalars().all():
             l.town = towns_by_name["София"]
             updated += 1
         if updated:

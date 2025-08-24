@@ -15,10 +15,11 @@ from sqlalchemy import event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .extensions import db, Base
+from .extensions import Base
 
-""" Creating the Town Model """
-class Town(Base):
+
+# Creating the Town Model
+class Town(Base): # pylint: disable=too-few-public-methods
     """SQLAlchemy model representing a town."""
     __tablename__ = "town"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -37,27 +38,30 @@ class Town(Base):
         foreign_keys="User.notify_town_id")
 
 
-""" Creating Roles describing the user role in the system """
+# Creating Roles describing the user role in the system
 class Role(str, Enum):
+    """Defining the Roles"""
     USER = 'user'
     ADMIN = "admin"
 
 
-""" Status for the type of the current status of Listing """
+# Status for the type of the current status of Listing
 class Status(str, Enum):
+    """Defining the Statuses"""
     LOST = "LOST"
     FOUND = "FOUND"
     RETURNED = "RETURNED"
 
 
-""" Comment Status - depending what the owner of the Lsiting can answer """
+# Comment Status - depending what the owner of the Lsiting can answer
 class CommentStatus(str, Enum):
+    """Defining the Comment status - different from Listing Status"""
     PENDING = "PENDING"
     CONFIRMED = "CONFIRMED"
     REJECTED = "REJECTED"
 
 
-""" Defining the User """
+# Defining the User
 class User(Base, UserMixin):
     """SQLAlchemy model representing an application user."""
     __tablename__ = "user"
@@ -100,22 +104,25 @@ class User(Base, UserMixin):
         back_populates="subscribers", foreign_keys=[notify_category_id])
 
     def set_password(self, password: str) -> None:
+        """Hash and store the user's password."""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str) -> bool:
+        """Verify the given password against the stored hash."""
         return check_password_hash(self.password_hash, password)
 
 
-#Normalization function transforming the Cyrillic letter to be searchable
+# Normalization function transforming the Cyrillic letter to be searchable
 def _norm(s: str | None) -> str:
+    """Normalize and fold string for search."""
     if not s:
         return ""
     return unicodedata.normalize("NFKC", s).casefold().strip()
 
 
-""" The main model - Listing """
-class Listing(Base):
-    """SQLAlchemy model representing a lost or found listing."""
+# The main model - Listing
+class Listing(Base): # pylint: disable=too-few-public-methods
+    """Lost/found listing."""
     __tablename__ = "listing"
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)
@@ -170,15 +177,16 @@ class Listing(Base):
                                                 index=True)
     town: Mapped["Town"] = relationship(back_populates="listings")
 
-#Event listener to change the listing properties upon creation so it can searchable
+# Event listener to change the listing properties upon creation so it can searchable
 @event.listens_for(Listing, "before_insert")
 @event.listens_for(Listing, "before_update")
-def _fill_listing_search_cols(mapper, connection, target: "Listing"):
+def _fill_listing_search_cols(mapper, connection, target: "Listing"): # pylint: disable=unused-argument
+    """Populate normalized search columns before insert/update."""
     target.title_search = _norm(target.title)
     target.description_search = _norm(target.description)
 
-""" Category - type of the Listing """
-class Category(Base):
+# Category - type of the Listing
+class Category(Base): # pylint: disable=too-few-public-methods
     """SQLAlchemy model representing a listing category."""
     __tablename__ = "category"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -193,8 +201,8 @@ class Category(Base):
         foreign_keys="User.notify_category_id")
 
 
-""" Images of the Listing """
-class ListingImage(Base):
+# Images of the Listing
+class ListingImage(Base): # pylint: disable=too-few-public-methods
     """SQLAlchemy model representing a Image of a listing."""
     __tablename__ = "listing_image"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -205,7 +213,7 @@ class ListingImage(Base):
     listing: Mapped["Listing"] = relationship(back_populates="images")
 
 #Images of the comments
-class CommentImage(Base):
+class CommentImage(Base): # pylint: disable=too-few-public-methods
     """SQLAlchemy model representing a comment picture on a listing."""
     __tablename__ = "comment_image"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -216,7 +224,7 @@ class CommentImage(Base):
     comment: Mapped["Comment"] = relationship(back_populates="images")
 
 #Comment - users can answer to the Listing
-class Comment(Base):
+class Comment(Base):# pylint: disable=too-few-public-methods
     """SQLAlchemy model representing a user comment on a listing."""
     __tablename__ = "comment"
     id: Mapped[int] = mapped_column(primary_key=True)

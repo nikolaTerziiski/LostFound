@@ -1,3 +1,5 @@
+"""Listings blueprint routes."""
+
 import os
 import secrets
 from datetime import datetime
@@ -18,9 +20,10 @@ from .notifications import notify_all_users
 
 
 def save_image(form_image):
-    hex = secrets.token_hex(8)
+    """Save an uploaded image with resizing and return the filename."""
+    hex_token = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_image.filename)
-    image_fn = hex + f_ext
+    image_fn = hex_token + f_ext
     image_path = os.path.join(current_app.root_path, '..',
                               current_app.config['UPLOAD_PICTURES'], image_fn)
 
@@ -37,25 +40,22 @@ def save_image(form_image):
 
 @listings_bp.route("/")
 def index():
+    """Render the listings index page with search, filter and pagination."""
     page = request.args.get("page", 1, type=int)
 
     search_query_raw = request.args.get('q')
     search_query = search_query_raw.strip() if search_query_raw else ""
-    
     category_input = request.args.get('category', type=int)
     town = request.args.get('town', type=int)
 
     statement = select(Listing).order_by(Listing.created_at.desc())
-    
     categories = db.session.execute(
         select(Category).order_by(Category.name.asc())
     ).scalars().all()
-    
     towns = db.session.execute(
         select(Town).order_by(Town.name.asc())
     ).scalars().all()
-    
-    if (search_query):
+    if search_query:
         query_lower = search_query.lower().strip()
 
         tokenized_lower = [t for t in query_lower.split() if t]
@@ -67,11 +67,9 @@ def index():
                     func.lower(Listing.description_search).contains(word),
                 ))
 
-    if (category_input):
-        statement = statement.where(Listing.category_id == category_input)
+    if (category_input): statement = statement.where(Listing.category_id == category_input)
 
-    if (town):
-        statement = statement.where(Listing.town_id == town)
+    if (town): statement = statement.where(Listing.town_id == town)
 
     pagination = db.paginate(statement, page=page, per_page=10, error_out=False)
     listings = pagination.items
@@ -88,6 +86,7 @@ def index():
 
 @listings_bp.route('/<int:listing_id>', methods=["GET", "POST"])
 def detail(listing_id: int):
+    """Displaying the details of the page"""
     listing = db.get_or_404(Listing, listing_id)
 
     print(listing.status)
@@ -97,6 +96,7 @@ def detail(listing_id: int):
             abort(403)
 
         comment_text = comment_form.text.data
+        comment = None
         if comment_text:
             comment = Comment(text=comment_text.strip(),
                           listing_id=listing.id,
@@ -131,13 +131,14 @@ def detail(listing_id: int):
 
 @listings_bp.route("/create", methods=["GET", "POST"])
 @login_required
-def create():
+def create(): # pylint: disable=too-many-locals
+    """Creating the Listings"""
     if request.method == "POST":
         title = request.form.get("title")
         description = request.form.get("description")
         category_id = request.form.get("category_id")
-        coordinateX = request.form.get("coordinateX")
-        coordinateY = request.form.get("coordinateY")
+        coordinate_x = request.form.get("coordinateX")
+        coordinate_y= request.form.get("coordinateY")
         date_event_str = request.form.get("date_event")
         contact_name = request.form.get("contact_name")
         contact_phone = request.form.get("contact_phone")
@@ -162,8 +163,8 @@ def create():
             description=description,
             category_id=int(category_id),
             status=Status.LOST,
-            coordinateX=float(coordinateX) if coordinateX else None,
-            coordinateY=float(coordinateY) if coordinateY else None,
+            coordinateX=float(coordinate_x) if coordinate_x else None,
+            coordinateY=float(coordinate_y) if coordinate_y else None,
             owner=current_user,
             date_event=date_event_obj,
             contact_name=contact_name,
@@ -192,6 +193,7 @@ def create():
 @listings_bp.route("/edit/<int:listing_id>", methods=["GET", "POST"])
 @login_required
 def edit(listing_id: int):
+    """The owner can edit the Listing"""
     listing = db.get_or_404(Listing, listing_id)
     if listing.owner_id != current_user.id and current_user.role.value != "admin":
         abort(403)
@@ -241,6 +243,7 @@ def edit(listing_id: int):
 @listings_bp.route("/delete/<int:listing_id>", methods=["POST"])
 @login_required
 def delete(listing_id: int):
+    """If it's deleting the route"""
     listing = db.get_or_404(Listing, listing_id)
     if listing.owner_id != current_user.id and getattr(
             current_user.role, "value", str(current_user.role)) != "admin":
@@ -253,6 +256,7 @@ def delete(listing_id: int):
 
 @listings_bp.route("/map", methods=["GET"])
 def map():
+    """Here we generate the listings from the DB to build the map"""
     listings = db.session.execute(
         select(Listing).where(Listing.status != Status.RETURNED)
     ).scalars().all()
@@ -262,6 +266,7 @@ def map():
 
 @listings_bp.route("/<int:listing_id>/returned", methods=["POST"])
 def returned(listing_id: int):
+    """The owner marks it as returned"""
     listing = db.get_or_404(Listing, listing_id)
     if not (current_user.is_authenticated
             and listing.owner_id == current_user.id):
@@ -279,6 +284,7 @@ def returned(listing_id: int):
 @listings_bp.route("/comment/<int:listing_id>/<int:comment_id>",
                    methods=["POST"])
 def delete_comment(listing_id: int, comment_id: int):
+    """Deleting comment"""
     listing = db.get_or_404(Listing, listing_id)
     comment = db.get_or_404(Comment, comment_id)
 
@@ -299,7 +305,7 @@ def delete_comment(listing_id: int, comment_id: int):
 @login_required
 @listings_bp.post("/comment/<int:listing_id>/<int:comment_id>/accept")
 def accept_comment(listing_id: int, comment_id: int):
-
+    """The owner accepts someone from the comments as "Accepted"""
     comment = db.get_or_404(Comment, comment_id)
     listing = db.get_or_404(Listing, listing_id)
 
@@ -319,6 +325,7 @@ def accept_comment(listing_id: int, comment_id: int):
 @listings_bp.post("/listing/<int:listing_id>/comment/<int:comment_id>/reject")
 @login_required
 def reject_comment(listing_id: int, comment_id: int):
+    """If someone provides wrong information the owner can reject it"""
     listing = db.get_or_404(Listing, listing_id)
     comment = db.get_or_404(Comment, comment_id)
 

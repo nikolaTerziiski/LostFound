@@ -18,6 +18,7 @@ config_by_name = {'development': Config, 'testing': TestingConfig}
 
 
 def create_app(config_class: str = 'development') -> Flask:
+    """Declaration of the application"""
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_class])
     db.init_app(app)
@@ -29,6 +30,7 @@ def create_app(config_class: str = 'development') -> Flask:
 
     @login_manager.user_loader
     def load_user(user_id: str):
+        """Flask-Login user loader: return User by primary key."""
         return db.session.get(User, int(user_id))
 
     app.register_blueprint(api_bp, url_prefix="/api")

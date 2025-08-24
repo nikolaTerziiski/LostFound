@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template
+"""Defining the main route (INDEX PAGE)"""
 
-from ..models import Listing
+from flask import Blueprint, render_template
 
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
 @bp.route('/index')
 def index():
+    """Initiallizing the main page"""
     return render_template('home.html')

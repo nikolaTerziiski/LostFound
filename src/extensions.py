@@ -16,9 +16,10 @@ convention = {
     "pk": "pk_%(table_name)s"
 }
 
+
 class Base(DeclarativeBase):
     """Declarative base for SQLAlchemy models."""
-    pass
+
 
 metadata = MetaData(naming_convention=convention)
 db: SQLAlchemy = SQLAlchemy(model_class=Base, metadata=metadata)

@@ -13,9 +13,11 @@ class Town(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(255), unique=True, nullable=False)
     
-    users: Mapped[list["User"]] = relationship(back_populates="town")
     
     listings:Mapped[list["Listing"]] = relationship(back_populates="town")
+    
+    users: Mapped[list["User"]] = relationship("User", back_populates="town", foreign_keys="User.town_id")
+    subscribers: Mapped[list["User"]] = relationship("User", back_populates="notify_town", foreign_keys="User.notify_town_id")
     
 
 class Role(str, Enum):
@@ -41,19 +43,23 @@ class User(db.Model, UserMixin):
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(), default=datetime.utcnow)
 
     comments: Mapped[list["Comment"]] = relationship(back_populates="commenter", cascade="all, delete-orphan")
-    # по-добра типизация с back_populates
     listings: Mapped[list["Listing"]] = relationship(back_populates="owner")
     
     town_id: Mapped[int | None] = mapped_column(sa.ForeignKey("town.id", ondelete="SET NULL"), nullable=True, index=True)
-    town: Mapped["Town"] = relationship(back_populates="users")
+    town: Mapped["Town"] = relationship(back_populates="users", foreign_keys=[town_id])
+    
+    notify_enabled: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.text("0"))
+    notify_town_id: Mapped[int] = mapped_column(sa.ForeignKey("town.id"), nullable=True, index=True)
+    notify_category_id: Mapped[int] = mapped_column(sa.ForeignKey("category.id"), nullable=True, index=True)
+
+    notify_town: Mapped["Town"] = relationship(back_populates="subscribers", foreign_keys=[notify_town_id])
+    notify_category: Mapped["Category"] = relationship(back_populates="subscribers", foreign_keys=[notify_category_id])
     
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
-
-# app/models.py
 
 class Listing(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -91,6 +97,8 @@ class Category(db.Model):
     name: Mapped[str] = mapped_column(sa.String(128), unique=True, nullable=False)
     
     listings: Mapped[list["Listing"]] = relationship(back_populates="category")
+    subscribers: Mapped[list["User"]] = relationship("User", back_populates="notify_category", foreign_keys="User.notify_category_id")
+
     
     
 class ListingImage(db.Model):

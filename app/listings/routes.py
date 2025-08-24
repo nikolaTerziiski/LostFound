@@ -202,11 +202,26 @@ def delete(listing_id: int):
 
 @listings_bp.route("/map", methods=["GET"])
 def map():
-    listings = Listing.query.all()
+    listings = Listing.query.filter(Listing.status != Status.RETURNED).all()
     
     return render_template("listings/map.html", listings=listings)
 
+@listings_bp.route("/<int:listing_id>/returned", methods=["POST"])
+def returned(listing_id: int):
+    listing = Listing.query.get_or_404(listing_id)
+    print((current_user.is_authenticated and listing.owner_id == current_user.id))
+    if not (current_user.is_authenticated and listing.owner_id == current_user.id):
+        abort(403)
+        
+    listing.status = Status.RETURNED
+    
+    print(listing.status)
+    db.session.commit()
+    flash("Обявата е отбелязана като НАМЕРЕНА - ЧЕСТИТО!!.", "success")
+    return redirect(url_for("listings.detail", listing_id=listing.id))
 
+#HERE I MAKE THE COMMENTS ROUTES - SINCE THEY ARE DIRECTLY CONNECTED TO THE
+#LISTINGS THERE IS NO NEED IN SEPARATE MODULE BUT IT'S RECOMMENDED
 @login_required
 @listings_bp.route("/comment/<int:listing_id>/<int:comment_id>", methods=["POST"])
 def delete_comment(listing_id: int, comment_id: int):

@@ -2,47 +2,49 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from . import bp
 from .. import db
-from ..models import User, Town, Listing, Status
+from ..models import User, Town, Listing, Status, Category
 from .forms import LoginForm, RegistrationForm
-
 
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    
+
     form = RegistrationForm()
-    
+
     if form.validate_on_submit():
         user = User(email=form.email.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Успешна регистрация! Моля влезте','success')
+        flash('Успешна регистрация! Моля влезте', 'success')
         return redirect(url_for('auth.login'))
-    
-    return render_template('auth/register.html', title='Регистрация', form=form)
+
+    return render_template('auth/register.html',
+                           title='Регистрация',
+                           form=form)
 
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-        
+
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        
+
         if user is None or not user.check_password(form.password.data):
             flash('Неправилно потребителско име или парола', 'danger')
             return redirect(url_for('auth.login'))
-            
+
         login_user(user)
         next_page = request.args.get('next')
         return redirect(next_page or url_for('main.index'))
-        
+
     return render_template('auth/login.html', title='Вход', form=form)
+
 
 @bp.route('/logout')
 @login_required
@@ -55,7 +57,7 @@ def logout():
 def account():
     tab = request.args.get("tab", "settings")
     towns = Town.query.order_by(Town.name.asc()).all()
-
+    categories = Category.query.all()
     if request.method == "POST" and tab == "settings":
         town_id = request.form.get("town_id", type=int)
         if town_id:
@@ -80,13 +82,26 @@ def account():
             current_user.set_password(new)
             flash("Паролата е сменена.", "success")
 
+        current_user.notify_enabled = bool(request.form.get("notify_enabled"))
+        notify_town = request.form.get("notify_town_id", type=int)
+        notify_category = request.form.get("notify_category_id", type=int)
+        current_user.notify_town_id = notify_town if notify_town and notify_town > 0 else None
+        current_user.notify_category_id = notify_category if notify_category and notify_category > 0 else None
+        if current_user.notify_town_id == 0:
+            current_user.notify_town_id = None
+        if current_user.notify_category_id == 0:
+            current_user.notify_category_id = None
+
         db.session.commit()
         flash("Профилът е обновен.", "success")
         return redirect(url_for("auth.account", tab="settings"))
 
-    user_listings_q = Listing.query.filter_by(owner_id=current_user.id).order_by(Listing.created_at.desc())
-    active_listings   = user_listings_q.filter(Listing.status != Status.RETURNED).all()
-    finished_listings = user_listings_q.filter(Listing.status == Status.RETURNED).all()
+    user_listings_q = Listing.query.filter_by(
+        owner_id=current_user.id).order_by(Listing.created_at.desc())
+    active_listings = user_listings_q.filter(
+        Listing.status != Status.RETURNED).all()
+    finished_listings = user_listings_q.filter(
+        Listing.status == Status.RETURNED).all()
 
     return render_template(
         "auth/account.html",
@@ -94,4 +109,5 @@ def account():
         towns=towns,
         active_listings=active_listings,
         finished_listings=finished_listings,
+        categories=categories
     )

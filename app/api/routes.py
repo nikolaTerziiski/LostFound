@@ -1,14 +1,14 @@
 from flask import Blueprint, jsonify, url_for
 from datetime import date
 from ..extensions import db
-from ..models import Listing
+from ..models import Listing, Status
 
 
 bp = Blueprint("api", __name__)
 
 @bp.get("/listings")
 def api_listings():
-    listings = Listing.query.all()  # взимаме всички обяви
+    listings = Listing.query.filter(Listing.status != Status.RETURNED)  # взимаме всички обяви
     data = []
     for it in listings:
         data.append({

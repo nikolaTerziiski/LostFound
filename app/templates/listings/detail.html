@@ -5,6 +5,11 @@
 <div class="card">
   <div class="card-body">
 
+    {% if listing.status.value == 'RETURNED' %}
+      <div class="alert alert-success text-center fw-bold mb-4" role="alert" style="font-size: 1.2rem;">
+        ИЗГУБЕНОТО БЕШЕ НАМЕРЕНО И Е ПРИ МЕН - БЛАГОДАРЯ НА ВСИЧКИ
+      </div>
+     {% endif %}
     {% if listing.images %}
     {% if listing.images|length > 1 %}
     <div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
@@ -73,10 +78,17 @@
       {% if current_user.is_authenticated and (current_user.id == listing.owner_id or current_user.role.value ==
       'admin') %}
       <a class="btn btn-outline-primary" href="{{ url_for('listings.edit', listing_id=listing.id) }}">Редактирай</a>
+      {% if listing.status.value != 'RETURNED' %}
+      <form method="post" action="{{ url_for('listings.returned', listing_id=listing.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-success">МАРКИРАЙ КАТО ПРИБРАНО</button>
+      </form>
+      {% endif %}
       <form method="post" action="{{ url_for('listings.delete', listing_id=listing.id) }}"
         onsubmit="return confirm('Сигурен ли си?');">
         <button type="submit" class="btn btn-outline-danger">Изтрий</button>
       </form>
+      
       {% endif %}
       <a class="btn btn-link" href="{{ url_for('listings.index') }}">← Назад</a>
     </div>
@@ -90,6 +102,7 @@
     </div>
 
     <div class="card-body">
+
       {% if current_user.is_authenticated %}
       <form method="post" class="mb-3" novalidate enctype="multipart/form-data">
         {{ form.hidden_tag() }}
@@ -144,20 +157,19 @@
               </div>
 
               <div class="d-flex gap-2">
-                {% if current_user.is_authenticated and (current_user.id == listing.owner_id or (current_user.role and
-                current_user.role.value == 'admin')) and c.status.value == 'PENDING' %}
-                <form method="post"
-                  action="{{ url_for('listings.accept_comment', listing_id=listing.id, comment_id=c.id) }}"
-                  class="d-inline">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-sm btn-outline-success">Това е</button>
-                </form>
-                <form method="post"
-                  action="{{ url_for('listings.reject_comment', listing_id=listing.id, comment_id=c.id) }}"
-                  class="d-inline">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-sm btn-outline-danger">Не е това</button>
-                </form>
+                {% if current_user.is_authenticated and current_user.id == listing.owner_id and c.status.value == 'PENDING' and listing.status.value != 'RETURNED' %}
+                  <form method="post"
+                    action="{{ url_for('listings.accept_comment', listing_id=listing.id, comment_id=c.id) }}"
+                    class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-outline-success">Това е</button>
+                  </form>
+                  <form method="post"
+                    action="{{ url_for('listings.reject_comment', listing_id=listing.id, comment_id=c.id) }}"
+                    class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-outline-danger">Не е това</button>
+                  </form>
                 {% endif %}
 
                 {% if current_user.is_authenticated and (current_user.id == c.commenter_id or (current_user.role and

@@ -53,7 +53,43 @@
               <label class="form-label">Повтори новата парола</label>
               <input type="password" name="repeat_password" class="form-control" minlength="5">
             </div>
+            <hr>
+            <h6 class="text-muted mb-2">Имейл известия</h6>
 
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="notify_enabled" name="notify_enabled" value="1"
+                    {% if current_user.notify_enabled %}checked{% endif %}>
+              <label class="form-check-label" for="notify_enabled">
+                Включи имейл известия при нови обяви
+              </label>
+              <div class="form-text">
+                Ако е включено, ще получаваш имейл при нова обява в избран <b>град</b> или <b>категория</b>.
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Известия по град</label>
+                <select name="notify_town_id" class="form-select">
+                  <option value="0" {% if not current_user.notify_town_id %}selected{% endif %}>— без —</option>
+                  {% for t in towns %}
+                    <option value="{{ t.id }}" {% if current_user.notify_town_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+                  {% endfor %}
+                </select>
+                <div class="form-text">Ще получаваш имейл за всяка нова обява от този град.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Известия по категория</label>
+                <select name="notify_category_id" class="form-select">
+                  <option value="0" {% if not current_user.notify_category_id %}selected{% endif %}>— без —</option>
+                  {% for c in categories %}
+                    <option value="{{ c.id }}" {% if current_user.notify_category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                  {% endfor %}
+                </select>
+                <div class="form-text">Ще получаваш имейл за всяка нова обява в тази категория.</div>
+              </div>
+            </div>
             <button class="btn btn-primary" type="submit">Запази</button>
           </form>
         </div>

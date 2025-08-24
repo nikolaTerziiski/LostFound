@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (const listing of data) {
         const lat = Number(listing.lat), lng = Number(listing.lng);
         
-        console.log(listing.picture)
         const html_for_hovering = listing.picture
         ? `<div class="listing-content" style="max-width:250px"><img src="${listing.picture}" width="100" style="border-radius:4px;display:block"><div class="lf-title">${listing.title ?? ''}</div>
       <div class="lf-date">Изгубено на: ${listing.date ?? ''}</div></div>`

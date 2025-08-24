@@ -1,5 +1,5 @@
 from datetime import date
-
+from sqlalchemy import select
 from src.extensions import db
 from src.models import Listing, User
 
@@ -18,8 +18,15 @@ class TestListings:
 
     def test_user_can_edit_own_listing(self, client, init_database):
         client.post('/login', data={'email': 'testuser@example.com', 'password': 'password'})
-        user = User.query.filter_by(email='testuser@example.com').first()
-        listing = Listing(title='Старо заглавие', description='Старо описание', owner_id=user.id, category_id=1, town_id=1, date_event=date.today())
+        user = db.session.scalar(select(User).filter_by(email='testuser@example.com'))
+        listing = Listing(
+            title='Старо заглавие',
+            description='Старо описание',
+            owner_id=user.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
         db.session.add(listing)
         db.session.commit()
 
@@ -30,8 +37,15 @@ class TestListings:
 
     def test_user_can_delete_own_listing(self, client, init_database):
         client.post('/login', data={'email': 'testuser@example.com', 'password': 'password'})
-        user = User.query.filter_by(email='testuser@example.com').first()
-        listing = Listing(title='За изтриване', description='Описание', owner_id=user.id, category_id=1, town_id=1, date_event=date.today())
+        user = db.session.scalar(select(User).filter_by(email='testuser@example.com'))
+        listing = Listing(
+            title='За изтриване',
+            description='Описание',
+            owner_id=user.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
         db.session.add(listing)
         db.session.commit()
         listing_id = listing.id
@@ -41,8 +55,15 @@ class TestListings:
         assert db.session.get(Listing, listing_id) is None
 
     def test_unauthenticated_user_cannot_edit_listing(self, client, init_database):
-        user = User.query.first()
-        listing = Listing(title='Обява за тест', description='Описание', owner_id=user.id, category_id=1, town_id=1, date_event=date.today())
+        user = db.session.execute(select(User)).scalars().first()
+        listing = Listing(
+            title='Обява за тест',
+            description='Описание',
+            owner_id=user.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
         db.session.add(listing)
         db.session.commit()
         
@@ -50,8 +71,15 @@ class TestListings:
         assert 'Вход'.encode('utf-8') in response.data
 
     def test_user_cannot_edit_others_listing(self, client, init_database):
-        admin = User.query.filter_by(email='admin@example.com').first()
-        listing = Listing(title='Обява на админ', description='Описание', owner_id=admin.id, category_id=1, town_id=1, date_event=date.today())
+        admin = db.session.scalar(select(User).filter_by(email='admin@example.com'))
+        listing = Listing(
+            title='Обява на админ',
+            description='Описание',
+            owner_id=admin.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
         db.session.add(listing)
         db.session.commit()
         
@@ -60,8 +88,15 @@ class TestListings:
         assert response.status_code == 403
 
     def test_unauthenticated_user_cannot_delete_listing(self, client, init_database):
-        user = User.query.first()
-        listing = Listing(title='Обява за тест', description='Описание', owner_id=user.id, category_id=1, town_id=1, date_event=date.today())
+        user = db.session.execute(select(User)).scalars().first()
+        listing = Listing(
+            title='Обява за тест',
+            description='Описание',
+            owner_id=user.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
         db.session.add(listing)
         db.session.commit()
         
@@ -70,8 +105,15 @@ class TestListings:
         assert '/login' in response.location
         
     def test_user_cannot_delete_others_listing(self, client, init_database):
-        admin = User.query.filter_by(email='admin@example.com').first()
-        listing = Listing(title='Обява на админ', description='Описание', owner_id=admin.id, category_id=1, town_id=1, date_event=date.today())
+        admin = db.session.scalar(select(User).filter_by(email='admin@example.com'))
+        listing = Listing(
+            title='Обява на админ',
+            description='Описание',
+            owner_id=admin.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
         db.session.add(listing)
         db.session.commit()
         
@@ -80,9 +122,23 @@ class TestListings:
         assert response.status_code == 403
         
     def test_search_and_filter_listings(self, client, init_database):
-        user = User.query.first()
-        listing1 = Listing(title="Намерено синьо портмоне", description="...", owner_id=user.id, category_id=1, town_id=1, date_event=date.today())
-        listing2 = Listing(title="Изгубени черни ключове", description="...", owner_id=user.id, category_id=1, town_id=1, date_event=date.today())
+        user = db.session.execute(select(User)).scalars().first()
+        listing1 = Listing(
+            title="Намерено синьо портмоне",
+            description="...",
+            owner_id=user.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
+        listing2 = Listing(
+            title="Изгубени черни ключове",
+            description="...",
+            owner_id=user.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
         db.session.add_all([listing1, listing2])
         db.session.commit()
 
@@ -94,7 +150,7 @@ class TestListings:
 
     def test_post_comment_on_listing(self, client, init_database):
         client.post('/login', data={'email': 'testuser@example.com', 'password': 'password'})
-        admin = User.query.filter_by(email='admin@example.com').first()
+        admin = db.session.scalar(select(User).filter_by(email='admin@example.com'))
         listing = Listing(title="Обява за коментар", description="...", owner_id=admin.id, category_id=1, town_id=1, date_event=date.today())
         
         db.session.add(listing)
@@ -110,8 +166,15 @@ class TestListings:
 
     def test_user_can_mark_listing_as_returned(self, client, init_database):
         client.post('/login', data={'email': 'testuser@example.com', 'password': 'password'})
-        user = User.query.filter_by(email='testuser@example.com').first()
-        listing = Listing(title="За връщане", description="...", owner_id=user.id, category_id=1, town_id=1, date_event=date.today())
+        user = db.session.scalar(select(User).filter_by(email='testuser@example.com'))
+        listing = Listing(
+            title="За връщане",
+            description="...",
+            owner_id=user.id,
+            category_id=1,
+            town_id=1,
+            date_event=date.today()
+        )
         db.session.add(listing)
         db.session.commit()
         response = client.post(f'/listings/{listing.id}/returned', follow_redirects=True)

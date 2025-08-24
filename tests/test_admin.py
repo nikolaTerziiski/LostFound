@@ -1,5 +1,6 @@
 # tests/test_admin.py
 from src.extensions import db
+from sqlalchemy import select
 from src.models import User
 
 
@@ -24,7 +25,7 @@ class TestAdmin:
     def test_admin_can_delete_user(self, client, init_database):
         client.post('/login', data={'email': 'admin@example.com', 'password': 'adminpass'})
         
-        user_to_delete = User.query.filter_by(email='testuser@example.com').first()
+        user_to_delete = db.session.scalar(select(User).filter_by(email='testuser@example.com'))
         assert user_to_delete is not None
         user_id = user_to_delete.id
 
@@ -35,7 +36,7 @@ class TestAdmin:
 
     def test_admin_cannot_delete_self(self, client, init_database):
         client.post('/login', data={'email': 'admin@example.com', 'password': 'adminpass'})
-        admin_user = User.query.filter_by(email='admin@example.com').first()
+        admin_user = db.session.scalar(select(User).filter_by(email='admin@example.com'))
         admin_id = admin_user.id
 
         response = client.post(f'/admin/user/{admin_id}/delete', follow_redirects=True)

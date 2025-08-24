@@ -74,7 +74,7 @@ def account():
     if request.method == "POST" and tab == "settings":
         town_id = request.form.get("town_id", type=int)
         if town_id:
-            town = Town.query.get(town_id)
+            town = db.session.get(Town, town_id)
             if town:
                 current_user.town = town
 

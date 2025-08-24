@@ -48,16 +48,17 @@ def index():
     category_input = request.args.get('category', type=int)
     town = request.args.get('town', type=int)
 
-    statement = select(Listing).order_by(Listing.created_at.desc())
+    query = select(Listing).order_by(Listing.created_at.desc())
+
     categories = db.session.execute(
         select(Category).order_by(Category.name.asc())
     ).scalars().all()
     towns = db.session.execute(
         select(Town).order_by(Town.name.asc())
     ).scalars().all()
+
     if search_query:
         query_lower = search_query.lower().strip()
-
         tokenized_lower = [t for t in query_lower.split() if t]
 
         for word in tokenized_lower:
@@ -65,23 +66,28 @@ def index():
                 or_(
                     func.lower(Listing.title_search).contains(word),
                     func.lower(Listing.description_search).contains(word),
-                ))
+                )
+            )
 
-    if (category_input): statement = statement.where(Listing.category_id == category_input)
+    if category_input:
+        query = query.where(Listing.category_id == category_input)
 
-    if (town): statement = statement.where(Listing.town_id == town)
+    if town:
+        query = query.where(Listing.town_id == town)
 
-    pagination = db.paginate(statement, page=page, per_page=10, error_out=False)
+    pagination = db.paginate(query, page=page, per_page=10, error_out=False)
     listings = pagination.items
 
-    return render_template("listings/index.html",
-                           listings=listings,
-                           pagination=pagination,
-                           search_query=search_query,
-                           categories=categories,
-                           towns=towns,
-                           category_id=category_input,
-                           town=town)
+    return render_template(
+        "listings/index.html",
+        listings=listings,
+        pagination=pagination,
+        search_query=search_query,
+        categories=categories,
+        towns=towns,
+        category_id=category_input,
+        town=town,
+    )
 
 
 @listings_bp.route('/<int:listing_id>', methods=["GET", "POST"])

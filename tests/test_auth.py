@@ -1,8 +1,11 @@
 from flask import session
 from flask_login import current_user
 
+from sqlalchemy import select
+
 from src import db
 from src.models import Town, User
+
 
 
 class TestAuth:
@@ -20,7 +23,9 @@ class TestAuth:
         assert 'Успешна регистрация! Моля влезте'.encode(
             'utf-8') in response.data
 
-        user = User.query.filter_by(email='new.user@test.com').first()
+        user = db.session.execute(
+            select(User).where(User.email == 'new.user@test.com')
+        ).scalar_one_or_none()
         assert user is not None
         assert user.email == 'new.user@test.com'
 
@@ -100,7 +105,9 @@ class TestAuth:
         assert response.status_code == 200
         assert 'Профилът е обновен.'.encode('utf-8') in response.data
 
-        user = User.query.filter_by(email='testuser@example.com').first()
+        user = db.session.scalar(
+            select(User).where(User.email == 'testuser@example.com')
+        )
         assert user.town.name == "Пловдив"
 
     def test_user_can_change_password_successfully(self, client,
@@ -121,7 +128,9 @@ class TestAuth:
 
         assert response.status_code == 200
         assert 'Паролата е сменена.'.encode('utf-8') in response.data
-        user = User.query.filter_by(email='testuser@example.com').first()
+        user = db.session.scalar(
+            select(User).where(User.email == 'testuser@example.com')
+        )
         assert user.check_password('new_password123')
         assert not user.check_password('password')
 

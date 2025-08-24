@@ -1,10 +1,12 @@
-from flask import Blueprint, request, render_template, flash, redirect, url_for
-from . import admin_required
-from flask_login import login_required, current_user
-from ..models import User, Listing
-from sqlalchemy.orm import joinedload
-from src.extensions import db
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
+
+from src.extensions import db
+
+from ..models import Listing, User
+from . import admin_required
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 

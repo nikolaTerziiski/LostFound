@@ -1,13 +1,17 @@
-from sqlalchemy import or_, func
-from datetime import datetime
-from PIL import Image
-import secrets
 import os
+import secrets
+from datetime import datetime
 
-from flask import render_template, request, redirect, url_for, flash, abort, current_app
-from flask_login import login_required, current_user
+from flask import (abort, current_app, flash, redirect, render_template,
+                   request, url_for)
+from flask_login import current_user, login_required
+from PIL import Image
+from sqlalchemy import func, or_, select
+
 from src.extensions import db
-from src.models import Listing, Category, Status, ListingImage, Comment, Town, CommentImage, CommentStatus
+from src.models import (Category, Comment, CommentImage, CommentStatus,
+                        Listing, ListingImage, Status, Town)
+
 from . import listings_bp
 from .forms import CommentForm
 from .notifications import notify_all_users
@@ -35,15 +39,23 @@ def save_image(form_image):
 def index():
     page = request.args.get("page", 1, type=int)
 
-    search_query = request.args.get('q', '').strip()
+    search_query_raw = request.args.get('q')
+    search_query = search_query_raw.strip() if search_query_raw else ""
+    
     category_input = request.args.get('category', type=int)
     town = request.args.get('town', type=int)
 
-    query = Listing.query.order_by(Listing.created_at.desc())
-    categories = Category.query.order_by(Category.name.asc())
-
+    statement = select(Listing).order_by(Listing.created_at.des())
+    
+    categories = db.session.execute(
+        select(Category).order_by(Category.name.asc())
+    ).scalars().all()
+    
+    towns = db.session.execute(
+        select(Town).order_by(Town.name.asc())
+    ).scalars().all()
+    
     if (search_query):
-
         query_lower = search_query.lower().strip()
 
         tokenized_lower = [t for t in query_lower.split() if t]
@@ -56,10 +68,10 @@ def index():
                 ))
 
     if (category_input):
-        query = query.filter_by(category_id=category_input)
+        statement = statement.where(Listing.category_id == category_input)
 
     if (town):
-        query = query.filter(Listing.town_id == town)
+        statement = statement.where(Listing.town_id == town)
 
     pagination = query.paginate(page=page, per_page=10, error_out=False)
     towns = Town.query.order_by(Town.name.asc()).all()
@@ -77,7 +89,7 @@ def index():
 
 @listings_bp.route('/<int:listing_id>', methods=["GET", "POST"])
 def detail(listing_id: int):
-    listing = Listing.query.get_or_404(listing_id)
+    listing = db.get_or_404(Listing, listing_id)
 
     print(listing.status)
     comment_form = CommentForm()
@@ -85,7 +97,9 @@ def detail(listing_id: int):
         if not current_user.is_authenticated:
             abort(403)
 
-        comment = Comment(text=comment_form.text.data.strip(),
+        comment_text = comment_form.text.data
+        if comment_text:
+            comment = Comment(text=comment_text.strip(),
                           listing_id=listing.id,
                           commenter_id=current_user.id)
 
@@ -105,8 +119,11 @@ def detail(listing_id: int):
     if request.method == "POST" and not comment_form.validate():
         flash("Моля, напишете нещо във формата!.", "danger")
 
-    listings_comment = (Comment.query.filter_by(
-        listing_id=listing.id).order_by(Comment.created_at.asc()).all())
+    listings_comment = db.session.execute(
+        select(Comment)
+        .where(Comment.listing_id == listing.id)
+        .order_by(Comment.created_at.asc())
+    ).scalars().all()
     return render_template("listings/detail.html",
                            listing=listing,
                            form=comment_form,
@@ -135,7 +152,7 @@ def create():
         image_files = request.files.getlist('images')
         image_filename = None
 
-        if not Category.query.get(category_id) or not Town.query.get(town_id):
+        if not db.session.get(Category, category_id) or not db.session.get(Town, town_id):
             flash("Невалидна категория или град.", "danger")
             return redirect(url_for("listings.create"))
 
@@ -158,9 +175,7 @@ def create():
         for image_file in image_files:
             if image_file and image_file.filename != '':
                 image_filename = save_image(image_file)
-                new_image = ListingImage(image_path=image_filename,
-                                         listing=listing)
-                db.session.add(new_image)
+                db.session.add(ListingImage(image_path=image_filename, listing=listing))
 
         db.session.add(listing)
         db.session.commit()
@@ -168,8 +183,8 @@ def create():
         flash("Обявата е създадена успешно!", "success")
         return redirect(url_for("listings.detail", listing_id=listing.id))
 
-    categories = Category.query.all()
-    towns = Town.query.all()
+    categories = db.session.execute(select(Category)).scalars().all()
+    towns = db.session.execute(select(Town)).scalars().all()
     return render_template("listings/create.html",
                            categories=categories,
                            towns=towns)
@@ -178,15 +193,16 @@ def create():
 @listings_bp.route("/edit/<int:listing_id>", methods=["GET", "POST"])
 @login_required
 def edit(listing_id: int):
-    listing = Listing.query.get_or_404(listing_id)
+    listing = db.get_or_404(Listing, listing_id)
     if listing.owner_id != current_user.id and current_user.role.value != "admin":
         abort(403)
 
     if request.method == "POST":
         listing.title = (request.form.get("title") or "").strip()
         listing.description = (request.form.get("description") or "").strip()
-        listing.category_id = request.form.get("category_id", type=int)
-
+        category_id = request.form.get("category_id", type=int)
+        if category_id is not None:
+            listing.category_id = category_id
         listing.contact_name = request.form.get("contact_name")
         listing.contact_phone = request.form.get("contact_phone")
         listing.contact_email = request.form.get("contact_email")
@@ -204,10 +220,9 @@ def edit(listing_id: int):
             return redirect(url_for("listings.edit", listing_id=listing.id))
 
         image_file = request.files.get('image')
-        image_filename = None
 
         if image_file and image_file.filename != '':
-            image_filename = save_image(image_file)
+            _ = save_image(image_file)
 
         listing.coordinateX = request.form.get("coordinateX", type=float)
         listing.coordinateY = request.form.get("coordinateY", type=float)
@@ -217,7 +232,7 @@ def edit(listing_id: int):
         return redirect(url_for("listings.detail",
                                 listing_id=listing.id))  # detail, не details!
 
-    categories = Category.query.all()
+    categories = db.session.execute(select(Category)).scalars().all()
     return render_template("listings/edit.html",
                            listing=listing,
                            categories=categories,
@@ -227,7 +242,7 @@ def edit(listing_id: int):
 @listings_bp.route("/delete/<int:listing_id>", methods=["POST"])
 @login_required
 def delete(listing_id: int):
-    listing = Listing.query.get_or_404(listing_id)
+    listing = db.get_or_404(Listing, listing_id)
     if listing.owner_id != current_user.id and getattr(
             current_user.role, "value", str(current_user.role)) != "admin":
         abort(403)
@@ -239,14 +254,16 @@ def delete(listing_id: int):
 
 @listings_bp.route("/map", methods=["GET"])
 def map():
-    listings = Listing.query.filter(Listing.status != Status.RETURNED).all()
+    listings = db.session.execute(
+        select(Listing).where(Listing.status != Status.RETURNED)
+    ).scalars().all()
 
     return render_template("listings/map.html", listings=listings)
 
 
 @listings_bp.route("/<int:listing_id>/returned", methods=["POST"])
 def returned(listing_id: int):
-    listing = Listing.query.get_or_404(listing_id)
+    listing = db.get_or_404(Listing, listing_id)
     if not (current_user.is_authenticated
             and listing.owner_id == current_user.id):
         abort(403)
@@ -263,8 +280,8 @@ def returned(listing_id: int):
 @listings_bp.route("/comment/<int:listing_id>/<int:comment_id>",
                    methods=["POST"])
 def delete_comment(listing_id: int, comment_id: int):
-    listing = Listing.query.get_or_404(listing_id)
-    comment = Comment.query.get_or_404(comment_id)
+    listing = db.get_or_404(Listing, listing_id)
+    comment = db.get_or_404(Comment, comment_id)
 
     is_admin = getattr(current_user.role, "value",
                        current_user.role) == "admin"
@@ -284,8 +301,8 @@ def delete_comment(listing_id: int, comment_id: int):
 @listings_bp.post("/comment/<int:listing_id>/<int:comment_id>/accept")
 def accept_comment(listing_id: int, comment_id: int):
 
-    comment = Comment.query.get_or_404(comment_id)
-    listing = Listing.query.get_or_404(listing_id)
+    comment = db.get_or_404(Comment, comment_id)
+    listing = db.get_or_404(Listing, listing_id)
 
     if not (current_user.is_authenticated
             and listing.owner_id == current_user.id):
@@ -303,8 +320,8 @@ def accept_comment(listing_id: int, comment_id: int):
 @listings_bp.post("/listing/<int:listing_id>/comment/<int:comment_id>/reject")
 @login_required
 def reject_comment(listing_id: int, comment_id: int):
-    listing = Listing.query.get_or_404(listing_id)
-    comment = Comment.query.get_or_404(comment_id)
+    listing = db.get_or_404(Listing, listing_id)
+    comment = db.get_or_404(Comment, comment_id)
 
     if not (current_user.is_authenticated
             and listing.owner_id == current_user.id):

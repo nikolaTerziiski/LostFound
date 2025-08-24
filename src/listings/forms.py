@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import TextAreaField, SubmitField, MultipleFileField
-from wtforms.validators import DataRequired, Length
 from flask_wtf.file import FileAllowed
+from wtforms import MultipleFileField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Length
 
 
 class CommentForm(FlaskForm):

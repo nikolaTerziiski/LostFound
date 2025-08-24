@@ -1,6 +1,8 @@
 from datetime import date
+
 from src.extensions import db
 from src.models import Listing, User
+
 
 class TestListings:
     def test_create_listing_as_authenticated_user(self, client, init_database):

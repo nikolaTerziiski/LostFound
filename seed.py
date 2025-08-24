@@ -1,7 +1,9 @@
+from datetime import date
+
 from src import create_app
 from src.extensions import db
-from src.models import User, Listing, Status, Role, Category, ListingImage, Town
-from datetime import date
+from src.models import (Category, Listing, ListingImage, Role, Status, Town,
+                        User)
 
 app = create_app()
 

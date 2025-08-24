@@ -1,9 +1,9 @@
+import sqlalchemy as sa
 from flask import current_app, url_for
 from flask_mail import Message
-import sqlalchemy as sa
 
 from ..extensions import mail
-from ..models import User, Listing
+from ..models import Listing, User
 
 
 def notify_all_users(listing: "Listing") -> int:

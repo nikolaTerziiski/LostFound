@@ -1,8 +1,9 @@
-from flask import render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, login_required, current_user
-from . import bp
+from flask import flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+
 from .. import db
-from ..models import User, Town, Listing, Status, Category
+from ..models import Category, Listing, Status, Town, User
+from . import bp
 from .forms import LoginForm, RegistrationForm
 
 

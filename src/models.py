@@ -1,20 +1,21 @@
 #src/models.py
 from __future__ import annotations
-from datetime import datetime, date
-from enum import Enum
-from typing import Optional
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
-from .extensions import db
 
 import unicodedata
-import sqlalchemy as sa
-from sqlalchemy import event
+from datetime import date, datetime
+from enum import Enum
+from typing import Optional
 
+import sqlalchemy as sa
+from flask_login import UserMixin
+from sqlalchemy import event
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from .extensions import db, Base
 
 """ Creating the Town Model """
-class Town(db.Model):
+class Town(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(255),
                                       unique=True,
@@ -52,7 +53,7 @@ class CommentStatus(str, Enum):
 
 
 """ Defining the User """
-class User(db.Model, UserMixin):
+class User(Base, UserMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(sa.String(255),
                                        unique=True,
@@ -106,7 +107,7 @@ def _norm(s: str | None) -> str:
 
 
 """ The main model - Listing """
-class Listing(db.Model):
+class Listing(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     title_search: Mapped[str] = mapped_column(sa.Text(),
@@ -168,7 +169,7 @@ def _fill_listing_search_cols(mapper, connection, target: "Listing"):
     target.description_search = _norm(target.description)
 
 """ Category - type of the Listing """
-class Category(db.Model):
+class Category(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(128),
                                       unique=True,
@@ -182,7 +183,7 @@ class Category(db.Model):
 
 
 """ Images of the Listing """
-class ListingImage(db.Model):
+class ListingImage(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     image_path: Mapped[str] = mapped_column(sa.String(255), nullable=False)
 
@@ -191,7 +192,7 @@ class ListingImage(db.Model):
     listing: Mapped["Listing"] = relationship(back_populates="images")
 
 #Images of the comments
-class CommentImage(db.Model):
+class CommentImage(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     image_path: Mapped[str] = mapped_column(sa.String(255), nullable=False)
 
@@ -200,7 +201,7 @@ class CommentImage(db.Model):
     comment: Mapped["Comment"] = relationship(back_populates="images")
 
 #Comment - users can answer to the Listing
-class Comment(db.Model):
+class Comment(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(sa.Text(), nullable=False)
     images: Mapped[list["CommentImage"]] = relationship(

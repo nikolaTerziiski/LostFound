@@ -1,7 +1,8 @@
 from flask import session
 from flask_login import current_user
-from src.models import User, Town
+
 from src import db
+from src.models import Town, User
 
 
 class TestAuth:

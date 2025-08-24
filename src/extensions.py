@@ -1,10 +1,10 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
-from sqlalchemy import MetaData
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
-
+from sqlalchemy import MetaData
+from sqlalchemy.orm import DeclarativeBase
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -14,8 +14,11 @@ convention = {
     "pk": "pk_%(table_name)s"
 }
 
+class Base(DeclarativeBase):
+    pass
+
 metadata = MetaData(naming_convention=convention)
-db: SQLAlchemy = SQLAlchemy(metadata=metadata)
+db: SQLAlchemy = SQLAlchemy(model_class=Base, metadata=metadata)
 migrate: Migrate = Migrate()
 login_manager: LoginManager = LoginManager()
 mail: Mail = Mail()

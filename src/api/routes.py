@@ -1,8 +1,9 @@
-from flask import Blueprint, jsonify, url_for
 from datetime import date
+
+from flask import Blueprint, jsonify, url_for
+
 from ..extensions import db
 from ..models import Listing, Status
-
 
 bp = Blueprint("api", __name__)
 

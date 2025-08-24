@@ -1,6 +1,7 @@
 # tests/test_admin.py
-from src.models import User
 from src.extensions import db
+from src.models import User
+
 
 class TestAdmin:
 

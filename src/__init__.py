@@ -1,16 +1,16 @@
+import os
+
 from flask import Flask, send_from_directory
-from .config import Config, TestingConfig
-from .extensions import db, migrate, login_manager, mail, csrf
-from . import models
-from .models import User
+
+from .admin.routes import admin_bp
 from .api.routes import bp as api_bp
 from .auth.routes import bp as auth_bp
-from .listings.routes import listings_bp
+from .config import Config, TestingConfig
 from .errors import errors_bp
+from .extensions import csrf, db, login_manager, mail, migrate
+from .listings.routes import listings_bp
 from .main.routes import bp as main_bp
-from .admin.routes import admin_bp
-
-import os
+from .models import User
 
 config_by_name = {'development': Config, 'testing': TestingConfig}
 

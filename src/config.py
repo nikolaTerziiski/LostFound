@@ -23,3 +23,5 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost.localdomain' 
+    MAIL_SUPPRESS_SEND = True
+    MAIL_DEFAULT_SENDER = 'noreply@test.com'

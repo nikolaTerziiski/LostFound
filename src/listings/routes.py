@@ -39,12 +39,16 @@ def index():
     query = Listing.query.order_by(Listing.created_at.desc())
     categories = Category.query.order_by(Category.name.asc())
     
-    
     if(search_query):
-        query = query.filter(or_(
-            Listing.title.ilike(f"%{search_query}%")),
-            Listing.description.lower().ilike(f"%{search_query}%"))
         
+        query_lower = search_query.lower().strip()
+        
+        tokenized_lower = [t for t in query_lower.split() if t]
+        
+        for word in tokenized_lower:
+            query = query.filter(or_(func.lower(Listing.title_search).contains(word),
+            func.lower(Listing.description_search).contains(word),))
+
     if (category_input):
         query = query.filter_by(category_id=category_input)
     

@@ -3,10 +3,13 @@ from datetime import datetime,date
 from enum import Enum
 from typing import Optional
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import sqlalchemy as sa
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from .extensions import db
+
+import unicodedata
+import sqlalchemy as sa
+from sqlalchemy import event
 
 
 class Town(db.Model):
@@ -61,10 +64,20 @@ class User(db.Model, UserMixin):
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
 
+
+def _norm(s: str | None) -> str:
+    if not s:
+        return ""
+    return unicodedata.normalize("NFKC", s).casefold().strip()
+
 class Listing(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)
+    title_search: Mapped[str] = mapped_column(sa.Text(), index=True, nullable=True)
+    
     description: Mapped[str] = mapped_column(sa.Text(), nullable=False)
+    description_search: Mapped[str] = mapped_column(sa.Text(), index=True, nullable=True)
+    
     status: Mapped[Status] = mapped_column(sa.Enum(Status), default=Status.LOST, nullable=False)
 
     coordinateX:  Mapped[float | None] = mapped_column(sa.Float(), index=True)
@@ -91,6 +104,13 @@ class Listing(db.Model):
     
     town_id: Mapped[int | None] = mapped_column(sa.ForeignKey("town.id", ondelete="SET NULL"), nullable=False, index=True)
     town: Mapped["Town"] = relationship(back_populates="listings")
+
+
+@event.listens_for(Listing, "before_insert")
+@event.listens_for(Listing, "before_update")
+def _fill_listing_search_cols(mapper, connection, target: "Listing"):
+    target.title_search = _norm(target.title)
+    target.description_search = _norm(target.description)
     
 class Category(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)

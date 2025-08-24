@@ -1,10 +1,11 @@
-from flask import Blueprint, request, render_template
+from flask import Blueprint, request, render_template, flash, redirect, url_for
 from . import admin_required
-from flask_login import login_required
+from flask_login import login_required, current_user
 from ..models import User, Listing
 from sqlalchemy.orm import joinedload
 from src.extensions import db
 from sqlalchemy import func
+
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -48,3 +49,22 @@ def dashboard():
     )
     
     
+    
+@admin_bp.route("/user/<int:user_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def delete_user(user_id: int):
+    
+    user_to_delete = db.session.get(User, user_id)
+    if user_to_delete is None:
+        flash("Потребителят не е намерен.", "warning")
+        return redirect(url_for("admin.dashboard", tab="users"))
+    if user_to_delete.id == current_user.id:
+        flash("Не можете да изтриете собствения си администраторски акаунт.", "danger")
+        return redirect(url_for("admin.dashboard", tab="users"))
+
+    db.session.delete(user_to_delete)
+    db.session.commit()
+
+    flash(f"Потребител '{user_to_delete.email}' и всички негови обяви бяха изтрити.", "success")
+    return redirect(url_for("admin.dashboard", tab="users"))

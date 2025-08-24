@@ -44,7 +44,7 @@
         <div class="card-header"><h5 class="mb-0">Потребители</h5></div>
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th>ID</th><th>Email</th><th>Роля</th><th>Регистрация</th><th class="text-end"># Обяви</th></tr></thead>
+            <thead class="table-light"><tr><th>ID</th><th>Email</th><th>Роля</th><th>Регистрация</th><th class="text-end"># Обяви</th><th>Действия</th></tr></thead>
             <tbody>
               {% for u in users %}
               <tr>
@@ -53,6 +53,18 @@
                 <td><span class="badge bg-{% if u.role=='admin' %}danger{% else %}secondary{% endif %}">{{ u.role }}</span></td>
                 <td>{{ u.created_at.strftime("%d.%m.%Y") if u.created_at }}</td>
                 <td class="text-end">{{ u.listings|length }}</td>
+                <td>
+                  {% if u.id != current_user.id %}
+                  <form
+                    method="POST"
+                    action="{{ url_for('admin.delete_user', user_id=u.id) }}"
+                    onsubmit="return confirm('Сигурни ли сте? Това ще изтрие потребителя и ВСИЧКИТЕ му обяви перманентно!');"
+                  >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn btn-sm btn-danger">Изтрий</button>
+                  </form>
+                  {% endif %}
+                </td>
               </tr>
               {% endfor %}
             </tbody>

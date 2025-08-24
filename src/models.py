@@ -1,3 +1,6 @@
+"""SQLAlchemy models for the application."""
+
+
 #src/models.py
 from __future__ import annotations
 
@@ -16,6 +19,8 @@ from .extensions import db, Base
 
 """ Creating the Town Model """
 class Town(Base):
+    """SQLAlchemy model representing a town."""
+    __tablename__ = "town"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(255),
                                       unique=True,
@@ -54,6 +59,8 @@ class CommentStatus(str, Enum):
 
 """ Defining the User """
 class User(Base, UserMixin):
+    """SQLAlchemy model representing an application user."""
+    __tablename__ = "user"
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(sa.String(255),
                                        unique=True,
@@ -108,6 +115,8 @@ def _norm(s: str | None) -> str:
 
 """ The main model - Listing """
 class Listing(Base):
+    """SQLAlchemy model representing a lost or found listing."""
+    __tablename__ = "listing"
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     title_search: Mapped[str] = mapped_column(sa.Text(),
@@ -170,6 +179,8 @@ def _fill_listing_search_cols(mapper, connection, target: "Listing"):
 
 """ Category - type of the Listing """
 class Category(Base):
+    """SQLAlchemy model representing a listing category."""
+    __tablename__ = "category"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(128),
                                       unique=True,
@@ -184,6 +195,8 @@ class Category(Base):
 
 """ Images of the Listing """
 class ListingImage(Base):
+    """SQLAlchemy model representing a Image of a listing."""
+    __tablename__ = "listing_image"
     id: Mapped[int] = mapped_column(primary_key=True)
     image_path: Mapped[str] = mapped_column(sa.String(255), nullable=False)
 
@@ -193,6 +206,8 @@ class ListingImage(Base):
 
 #Images of the comments
 class CommentImage(Base):
+    """SQLAlchemy model representing a comment picture on a listing."""
+    __tablename__ = "comment_image"
     id: Mapped[int] = mapped_column(primary_key=True)
     image_path: Mapped[str] = mapped_column(sa.String(255), nullable=False)
 
@@ -202,6 +217,8 @@ class CommentImage(Base):
 
 #Comment - users can answer to the Listing
 class Comment(Base):
+    """SQLAlchemy model representing a user comment on a listing."""
+    __tablename__ = "comment"
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(sa.Text(), nullable=False)
     images: Mapped[list["CommentImage"]] = relationship(

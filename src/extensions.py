@@ -1,3 +1,5 @@
+"""Flask extensions initialization."""
+
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
@@ -15,6 +17,7 @@ convention = {
 }
 
 class Base(DeclarativeBase):
+    """Declarative base for SQLAlchemy models."""
     pass
 
 metadata = MetaData(naming_convention=convention)

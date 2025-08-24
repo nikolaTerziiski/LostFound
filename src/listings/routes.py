@@ -45,7 +45,7 @@ def index():
     category_input = request.args.get('category', type=int)
     town = request.args.get('town', type=int)
 
-    statement = select(Listing).order_by(Listing.created_at.des())
+    statement = select(Listing).order_by(Listing.created_at.desc())
     
     categories = db.session.execute(
         select(Category).order_by(Category.name.asc())
@@ -73,8 +73,7 @@ def index():
     if (town):
         statement = statement.where(Listing.town_id == town)
 
-    pagination = query.paginate(page=page, per_page=10, error_out=False)
-    towns = Town.query.order_by(Town.name.asc()).all()
+    pagination = db.paginate(statement, page=page, per_page=10, error_out=False)
     listings = pagination.items
 
     return render_template("listings/index.html",

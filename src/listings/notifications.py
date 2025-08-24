@@ -1,21 +1,25 @@
 import sqlalchemy as sa
+from sqlalchemy import select
 from flask import current_app, url_for
 from flask_mail import Message
 
-from ..extensions import mail
+from ..extensions import db, mail
 from ..models import Listing, User
 
-
 def notify_all_users(listing: "Listing") -> int:
-
-    query = User.query.filter(
-        User.notify_enabled.is_(True),
-        sa.or_(
-            User.notify_town_id == listing.town_id,
-            User.notify_category_id == listing.category_id,
-        ), User.id != listing.owner_id).with_entities(User.email)
-
-    emails = sorted({e for (e, ) in query.all()})
+    """Send notification emails to subscribed users matching town or category."""
+    query = (
+        select(User.email)
+        .where(
+            User.notify_enabled.is_(True),
+            sa.or_(
+                User.notify_town_id == listing.town_id,
+                User.notify_category_id == listing.category_id,
+            ),
+            User.id != listing.owner_id,
+        )
+    )
+    emails = sorted({e for (e, ) in db.session.execute(query).all()})
 
     if not emails:
         return 0

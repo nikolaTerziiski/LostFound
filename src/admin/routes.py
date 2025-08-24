@@ -1,6 +1,8 @@
+"""Admin dashboard routes."""
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
 from src.extensions import db
@@ -15,25 +17,33 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 @login_required
 @admin_required
 def dashboard():
-
+    """Render admin dashboard: overview, users, listings tabs."""
     #Overview she znachi, che tova e default stoinosta, toest ako otvorqt /admin/ she otvori defakto /admin/overview
     tab = request.args.get("tab", "overview")
 
-    total_users = User.query.count()
-    total_listings = Listing.query.count()
-    by_status = (db.session.query(Listing.status, func.count(
-        Listing.id)).group_by(Listing.status).all())
+    total_users = db.session.scalar(select(func.count()).select_from(User))
+    total_listings = db.session.scalar(select(func.count()).select_from(Listing))
+    by_status = db.session.execute(
+        select(Listing.status, func.count(Listing.id)).group_by(Listing.status)
+    ).all()
     status_counts = dict(by_status)
 
     users = []
     listings = []
     if tab == "users":
-        users = User.query.order_by(User.created_at.desc()).all()
+        users = db.session.execute(
+            select(User).order_by(User.created_at.desc())
+        ).scalars().all()
     elif tab == "listings":
-        listings = (Listing.query.options(joinedload(Listing.owner),
-                                          joinedload(Listing.category),
-                                          joinedload(Listing.town)).order_by(
-                                              Listing.created_at.desc()).all())
+        listings = db.session.execute(
+            select(Listing)
+            .options(
+                joinedload(Listing.owner),
+                joinedload(Listing.category),
+                joinedload(Listing.town),
+            )
+            .order_by(Listing.created_at.desc())
+        ).scalars().all()
 
     return render_template(
         "admin/dashboard.html",
@@ -50,7 +60,7 @@ def dashboard():
 @login_required
 @admin_required
 def delete_user(user_id: int):
-
+    """Delete a user (and their listings) from the admin panel."""
     user_to_delete = db.session.get(User, user_id)
     if user_to_delete is None:
         flash("Потребителят не е намерен.", "warning")

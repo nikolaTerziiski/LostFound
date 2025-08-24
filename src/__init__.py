@@ -1,3 +1,5 @@
+"""Application package bootstrap."""
+
 import os
 
 from flask import Flask, send_from_directory

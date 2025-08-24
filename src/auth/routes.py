@@ -1,7 +1,10 @@
+"""Auth routes."""
+
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import select
 
-from .. import db
+from ..extensions import db
 from ..models import Category, Listing, Status, Town, User
 from . import bp
 from .forms import LoginForm, RegistrationForm
@@ -9,6 +12,7 @@ from .forms import LoginForm, RegistrationForm
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
+    """Register new user."""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
 
@@ -29,12 +33,15 @@ def register():
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """Login user."""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        user = db.session.execute(
+            select(User).where(User.email == form.email.data)
+        ).scalars().first()
 
         if user is None or not user.check_password(form.password.data):
             flash('Неправилно потребителско име или парола', 'danger')
@@ -50,6 +57,7 @@ def login():
 @bp.route('/logout')
 @login_required
 def logout():
+    """Logout user and redirect to index."""
     logout_user()
     return redirect(url_for('main.index'))
 
@@ -57,9 +65,12 @@ def logout():
 @bp.route("/account", methods=["GET", "POST"])
 @login_required
 def account():
+    """User account: settings + my listings."""
     tab = request.args.get("tab", "settings")
-    towns = Town.query.order_by(Town.name.asc()).all()
-    categories = Category.query.all()
+    towns = db.session.execute(
+        select(Town).order_by(Town.name.asc())
+    ).scalars().all()
+    categories = db.session.execute(select(Category)).scalars().all()
     if request.method == "POST" and tab == "settings":
         town_id = request.form.get("town_id", type=int)
         if town_id:
@@ -98,12 +109,17 @@ def account():
         flash("Профилът е обновен.", "success")
         return redirect(url_for("auth.account", tab="settings"))
 
-    user_listings_q = Listing.query.filter_by(
-        owner_id=current_user.id).order_by(Listing.created_at.desc())
-    active_listings = user_listings_q.filter(
-        Listing.status != Status.RETURNED).all()
-    finished_listings = user_listings_q.filter(
-        Listing.status == Status.RETURNED).all()
+    user_listings = (
+        select(Listing)
+        .where(Listing.owner_id == current_user.id)
+        .order_by(Listing.created_at.desc())
+    )
+    active_listings = db.session.execute(
+        user_listings.where(Listing.status != Status.RETURNED)
+    ).scalars().all()
+    finished_listings = db.session.execute(
+        user_listings.where(Listing.status == Status.RETURNED)
+    ).scalars().all()
 
     return render_template(
         "auth/account.html",

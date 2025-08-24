@@ -64,7 +64,13 @@ MAIL_PORT=587
 MAIL_USERNAME=your-email@gmail.com
 MAIL_PASSWORD=your-google-app-password
 ```
-
+**5.0 Стана проблем при финално тестване и има разминаване между HEAD миграциите, моля да се изпълнят следните команди:**
+```bash
+ri .\migrations -r -fo
+Remove-Item -Force .\instance\lostfound.db
+flask db init
+flask db migrate -m "initial schema"
+```
 **5. Инициализирайте базата данни:**
 Изпълнете миграциите, за да създадете всички таблици в базата данни.
 ```bash
